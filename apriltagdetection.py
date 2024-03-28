@@ -3,19 +3,14 @@ CAMERA_RESOLUTION = (640, 480)
 CAMERA_FRAMERATE = 60
 STREAMING_RESOLUTION = (160, 120)
 FLIP_IMAGE = -1 # 0 for vertical flip, 1 for horizontal flip, -1 for flip both, None for do not flip
+server_port = 8888
 
-'''
-inspection and detection server running together
-'''
 import cv2
 import numpy as np
 from time import time, sleep
 # import apriltag
 import pupil_apriltags as apriltag # for windows
 import threading
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-from socketserver import ThreadingMixIn
-from time import time, sleep
 
 # cap = cv2.VideoCapture(CAM_PORT, cv2.CAP_V4L2) # camera port 0 for linux
 cap = cv2.VideoCapture(CAM_PORT) # camera port 0 for windows
@@ -25,8 +20,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_RESOLUTION[1]) # height
 cap.set(cv2.CAP_PROP_FPS, CAMERA_FRAMERATE) 
 # detector = apriltag.Detector(apriltag.DetectorOptions(families='tag36h11', nthreads=1))
 detector = apriltag.Detector(families='tag36h11', nthreads=1) # for windows
-
-server_port = 8888
+print("<-- camera and detector ready -->")
 
 running = True
 frame = None
@@ -99,86 +93,14 @@ def generate_frames():
         new_frame_ready = True
         detection_results_ready = True
 
-# MJPEG Streaming Server
-class StreamingHandler(SimpleHTTPRequestHandler):
-    def do_GET(self):
-        global new_frame_ready, detection_results_ready, detection_results, frame_time_samplecount, frame_time_total, lock
-        print(f"<--client visited {self.path} -->")
-        if self.path == "/":
-            # Return the main page (index.html)
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            # with open('/home/ironn-maple/index.html', 'rb') as f:
-            with open('./index.html', 'rb') as f:
-                content = f.read()
-            self.wfile.write(content)
-        elif self.path == '/fps':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            if frame_time_total == 0:
-                self.wfile.write("waiting for camera to start".encode())
-            else:
-                self.wfile.write( ("FPS: " + str(round(frame_time_samplecount / frame_time_total)))  .encode())
-            frame_time_total = 0
-            frame_time_samplecount = 0
-        elif self.path == '/video_feed':
-            self.send_response(200)
-            self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
-            self.end_headers()
-            while running:
-                try:
-                    lock.acquire()
-                    frame_resized = cv2.resize(frame, STREAMING_RESOLUTION)
-                    lock.release()
-                    ret, buffer = cv2.imencode('.jpg', frame_resized)
-                    frame_bytes = buffer.tobytes()
-                    self.send_frame(frame_bytes)
-                except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
-                    print("client disconnected")
-                    return
-                new_frame_ready = True
-        elif self.path == '/results':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            while running:
-                while (not detection_results_ready) and running:
-                    sleep(0.05)
-                detection_results_ready = False
-                try:
-                    self.wfile.write(detection_results.encode())
-                except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
-                    print("client disconnected")
-                    return
-                
+def generate_forever():
+    try:
+        generate_frames()
+    except KeyboardInterrupt:
+        lock.release()
 
-    def send_frame(self, frame):
-        boundary = b'frame'
-        headers = (
-            b'Content-Type: image/jpeg\r\n',
-            b'Content-Length: ' + str(len(frame)).encode() + b'\r\n\r\n'
-        )
-        self.wfile.write(b'--' + boundary + b'\r\n' + b''.join(headers) + frame + b'\r\n')
 
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    pass
-
-# Start the HTTP server in a separate thread
-print("<-- starting inspector server... -->")
-httpd = ThreadedHTTPServer(('0.0.0.0', server_port), StreamingHandler)
-server_thread = threading.Thread(target=httpd.serve_forever)
-server_thread.daemon = True
-server_thread.start()
-print("<-- inspector server started -->")
-
-try:
-    generate_frames()
-except KeyboardInterrupt:
-    lock.release()
-    pass
-running = False
-print("shutdown by user")
-httpd.shutdown()
-server_thread.join()
+detection_thread = threading.Thread(target=generate_forever)
+def start_detections():
+    detection_thread.daemon = True
+    detection_thread.start()
