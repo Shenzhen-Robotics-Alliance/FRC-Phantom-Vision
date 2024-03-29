@@ -24,14 +24,13 @@ print("<-- camera and detector ready -->")
 
 running = True
 frame = None
-new_frame_ready = False
-detection_results_ready = False
+detection_results = "<no results yet>"
 frame_time_total = 0
 frame_time_samplecount = 0
-detection_results = "<no results yet>"
 lock = threading.Lock()
+
 def generate_frames():
-    global frame, new_frame_ready, detection_results_ready, frame_time_total, frame_time_samplecount, detection_results, lock
+    global frame, frame_time_total, frame_time_samplecount, detection_results, lock
     t = time()
     print("generate frames activated")
     while running:
@@ -42,18 +41,17 @@ def generate_frames():
         ret, frame = cap.read()
         if frame is None:
             continue
-        print("read camera time: " + str(int((time() - dt)*1000)) + "ms")
-        print("camera actual resolution", frame.shape)
+        print("<-- capture time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
         
         dt = time()
         if FLIP_IMAGE is not None:
             frame = cv2.flip(frame, FLIP_IMAGE)
-        print("flip image time: " + str(int((time() - dt)*1000)) + "ms")
+        print("flip time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
 
         dt = time()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray)
-        print("detector time: " + str(int((time() - dt)*1000)) + "ms")
+        print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
 
         dt = time()
         detection_results = ""
@@ -82,7 +80,7 @@ def generate_frames():
             detection_results = "no-rst"
         
         lock.release()
-        print("process result time: " + str(int((time() - dt)*1000)) + "ms")
+        print("process result time: " + str(int((time() - dt)*1000)) + "ms -->")
 
         detection_results += "\n"
         frame_time_total += time()-t
@@ -104,3 +102,21 @@ detection_thread = threading.Thread(target=generate_forever)
 def start_detections():
     detection_thread.daemon = True
     detection_thread.start()
+
+def get_frame():
+    lock.acquire()
+    frame_resized = cv2.resize(frame, STREAMING_RESOLUTION)
+    lock.release()
+    return frame_resized
+
+def get_results() -> str:
+    detection_results
+
+def get_fps() -> int:
+    global frame_time_total, frame_time_samplecount
+    if frame_time_total == 0:
+        return -1
+    fps = round(frame_time_samplecount / frame_time_total)
+    frame_time_total = 0
+    frame_time_samplecount = 0
+    return fps
