@@ -16,6 +16,7 @@ class USBCamera:
         self.flip_code = flip_code
 
         self.image = no_result
+        self.gray = cv2.cvtColor(no_result, cv2.COLOR_BGR2GRAY)
         self.cap_thread = threading.Thread(target=self.capture_forever)
         self.lock = threading.Lock()
         self.stopped = False
@@ -32,12 +33,14 @@ class USBCamera:
                     print("<-- no result from camera yet -->")
                     self.image = no_result
                     continue
-                print("<-- frame captured, time: " + str(int((time() - dt)*1000)) + "ms -->")
+                # print("<-- frame captured, time: " + str(int((time() - dt)*1000)) + "ms -->")
                 self.lock.acquire()
                 if self.flip_code is not None:
                     self.image = cv2.flip(new_frame, self.flip_code)
                 else:
                     self.image = new_frame
+
+                self.gray = cv2.cvtColor(new_frame, cv2.COLOR_BGR2GRAY)
 
                 if time() - fps_last_calculated > 1:
                     fps = round(frames_count / (time()-fps_last_calculated))
@@ -57,14 +60,12 @@ class USBCamera:
         self.cap_thread.join()
         self.cap.release()
 
-    def get_image(self, flip_code):
+    def get_image(self):
         self.lock.acquire()
         image = self.image
         self.lock.release()
-        if flip_code is not None:
-            image = cv2.flip(image, flip_code)
         
         return image
 
-    def get_image_gray(self, flip_code):
-        return cv2.cvtColor(self.get_image(flip_code), cv2.COLOR_BGR2GRAY)
+    def get_image_gray(self):
+        return self.gray

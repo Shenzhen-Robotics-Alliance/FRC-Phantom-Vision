@@ -30,15 +30,15 @@ lock = threading.Lock()
 
 def detect_once():
     global frame, frame_time_total, frame_time_samplecount, tags, detection_results
-    print("<-- capturing -->")
+    # print("<-- capturing -->")
     dt = time()
-    frame = camera.get_image(FLIP_IMAGE)
+    frame = camera.get_image()
+    gray = camera.get_image_gray()
     if frame is None:
         return
-    print("<-- capture time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
+    print("<-- pull image from camera time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
 
     dt = time()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     tags = detector.detect(gray)
     print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
 
@@ -75,7 +75,7 @@ def generate_forever():
     t = time()
     print("generate frames activated")
     while running:
-        print("<-- acquiring lock -->")
+        # print("<-- acquiring lock -->")
         lock.acquire()
         
         detect_once()
