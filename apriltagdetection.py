@@ -21,7 +21,8 @@ else:
 print("<-- apriltag camera and detector ready -->")
 
 running = True
-frame = None
+frame = cameras.no_result
+frame_resized = cameras.no_result
 tags = None
 detection_results = "<no results yet>"
 frame_time_total = 0
@@ -29,13 +30,11 @@ frame_time_samplecount = 0
 lock = threading.Lock()
 
 def detect_once():
-    global frame, frame_time_total, frame_time_samplecount, tags, detection_results
+    global frame, frame_resized, frame_time_total, frame_time_samplecount, tags, detection_results
     # print("<-- capturing -->")
     dt = time()
     frame = camera.get_image()
     gray = camera.get_image_gray()
-    if frame is None:
-        return
     print("<-- pull image from camera time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
 
     dt = time()
@@ -66,6 +65,8 @@ def detect_once():
         detection_results += f"{tag.tag_id} {center[0]} {center[1]} {area}/"
     if detection_results=="":
         detection_results = "no-rst"
+
+    frame_resized = cv2.resize(frame, STREAMING_RESOLUTION)
     
     print("process result time: " + str(int((time() - dt)*1000)) + "ms -->")
 
@@ -100,9 +101,6 @@ def stop_detection():
     detection_thread.join()
 
 def get_frame():
-    lock.acquire()
-    frame_resized = cv2.resize(frame, STREAMING_RESOLUTION)
-    lock.release()
     return frame_resized
 
 def get_tags():
