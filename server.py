@@ -28,7 +28,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             if fps == -1:
                 self.wfile.write("waiting for camera to start".encode())
             else:
-                self.wfile.write( ("FPS: " + str(fps))  .encode())
+                self.wfile.write( ("Detector FPS: " + str(fps))  .encode())
         elif self.path == '/video_feed':
             self.send_response(200)
             self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')

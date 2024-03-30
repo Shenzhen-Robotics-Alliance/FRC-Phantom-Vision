@@ -21,6 +21,9 @@ class USBCamera:
         self.stopped = False
     
     def capture_forever(self):
+        fps = 0
+        fps_last_calculated = 0
+        frames_count = 0
         try:
             while not self.stopped:
                 dt = time()
@@ -35,6 +38,13 @@ class USBCamera:
                     self.image = cv2.flip(new_frame, self.flip_code)
                 else:
                     self.image = new_frame
+
+                if time() - fps_last_calculated > 1:
+                    fps = round(frames_count / (time()-fps_last_calculated))
+                    frames_count = 0
+                    fps_last_calculated = time()
+                frames_count += 1
+                cv2.putText(self.image, f"CAP FPS: {fps}", (30,30), cv2.FONT_HERSHEY_COMPLEX, 1.5, (0, 255, 0), 1)
                 self.lock.release()
         except KeyboardInterrupt:
             self.lock.release()
