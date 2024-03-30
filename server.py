@@ -42,17 +42,13 @@ class StreamingHandler(SimpleHTTPRequestHandler):
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
-                new_frame_ready = True
         elif self.path == '/results':
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
             while apriltagdetection.running:
-                while (not detection_results_ready) and apriltagdetection.running:
-                    sleep(0.05)
-                detection_results_ready = False
                 try:
-                    self.wfile.write(detection_results.encode())
+                    self.wfile.write(apriltagdetection.get_results().encode())
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
@@ -85,7 +81,7 @@ while True:
         print("<-- user interrupt, shutting down... -->")
         apriltagdetection.running = False
         httpd.shutdown()
-        apriltagdetection.detection_thread.join()
+        apriltagdetection.stop_detection()
         server_thread.join()
         break
 
