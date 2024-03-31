@@ -1,9 +1,13 @@
-CAM_PORT = 1
+CAM_PORT = 0
 CAMERA_RESOLUTION = (640, 480)
 CAMERA_FRAMERATE = 120
 STREAMING_RESOLUTION = (160, 120)
 FLIP_IMAGE = None # 0 for vertical flip, 1 for horizontal flip, -1 for flip both, None for do not flip
-server_port = 8888
+
+# crosshair setting
+CROSSHAIR_LENGTH = 30
+CROSSHAIR_COLOR = (0, 255, 0)
+CROSSHAIR_THICKNESS = 2
 
 import cv2, threading, sys, cameras
 import numpy as np
@@ -42,6 +46,7 @@ def detect_once():
     print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
 
     dt = time()
+    # mark apriltags and add detection results
     detection_results = ""
     for tag in tags:
         corners_pos = []
@@ -66,7 +71,14 @@ def detect_once():
     if detection_results=="":
         detection_results = "no-rst"
 
+   
+    # resize to straming resolution
     frame_resized = cv2.resize(frame, STREAMING_RESOLUTION)
+    # draw crosshair
+    frame_center = (STREAMING_RESOLUTION[0] // 2, STREAMING_RESOLUTION[1]//2)
+    cv2.line(frame_resized, (frame_center[0] - CROSSHAIR_LENGTH, frame_center[1]), (frame_center[0] + CROSSHAIR_LENGTH, frame_center[1]), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
+    cv2.line(frame_resized, (frame_center[0], frame_center[1] - CROSSHAIR_LENGTH), (frame_center[0], frame_center[1] + CROSSHAIR_LENGTH), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
+
     
     print("process result time: " + str(int((time() - dt)*1000)) + "ms -->")
 
