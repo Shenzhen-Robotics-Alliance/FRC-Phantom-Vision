@@ -91,3 +91,13 @@ print("<-- Horizontal Params: -->")
 regression_line(pixel_x_samples, horizontal_ratios_samples, "Camera Horizontal Param", "Pixel X", "(Horizontal Displacement / Distance) Ratio")
 print("<-- Vertical Params: -->")
 regression_line(pixel_y_samples, vertical_ratios_samples, "Camera Vertical Param", "Pixel Y", "(Vertical Displacement / Distance) Ratio")
+
+'''
+<-- Horizontal Params: -->
+Projection Ratio=0.0019083090502545134, Bias=0.0005214582385315181
+R^2: 0.999817916421933
+<-- Vertical Params: -->
+Projection Ratio=-0.0018938381148259048, Bias=-0.011943913024578173
+R^2: 0.9965217801193813
+WARINING!!! results not trustable!
+'''
