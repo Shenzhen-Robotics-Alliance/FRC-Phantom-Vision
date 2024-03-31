@@ -1,19 +1,18 @@
-first_col_height = 4
+first_col_height = 4-2
 spacing = 3.5
-camera_distances_to_paper = [20, 30, 40, 50]
+camera_distances_to_paper = [10, 20, 30, 40]
 
 top_left = (-spacing * 3.5, first_col_height + spacing * 4)
 
-tag_pos = []
-for col in range(5):
-    for row in range(8):
-        tag_pos.append((top_left[0] + col * spacing, top_left[1] - row * spacing))
+tag_pos = [None]
+for row in range(8):
+    for col in range(5):
+        tag_pos.append((top_left[0] + row * spacing, top_left[1] - col * spacing))
         print(tag_pos[-1])
 
 import apriltagdetection, cv2
-from time import time, sleep
 
-apriltagdetection.STREAMING_RESOLUTION = (1280, 720)
+apriltagdetection.STREAMING_RESOLUTION = (1024, 768)
 apriltagdetection.start_detections()
 
 i = 0
@@ -33,10 +32,10 @@ try:
             print("<-- results detected: ", end="")
             for tag in tags:
                 print(f"id {tag.tag_id} center {tag.center}", end="; ")
-                horizontal_ratios_samples.append(tag_pos[tag.tag_id][0] - apriltagdetection.CAMERA_RESOLUTION[0]/2 / camera_distances_to_paper[i])
-                vertical_ratios_samples.append(tag_pos[tag.tag_id][1] - apriltagdetection.CAMERA_RESOLUTION[1]/2 / camera_distances_to_paper[i])
-                pixel_x_samples.append(tag.center[0])
-                pixel_y_samples.append(tag.center[1])
+                horizontal_ratios_samples.append(tag_pos[tag.tag_id][0] / camera_distances_to_paper[i])
+                vertical_ratios_samples.append(tag_pos[tag.tag_id][1] / camera_distances_to_paper[i])
+                pixel_x_samples.append(tag.center[0] - apriltagdetection.CAMERA_RESOLUTION[0]/2)
+                pixel_y_samples.append(tag.center[1] - apriltagdetection.CAMERA_RESOLUTION[1]/2)
                 
             print(" -->")
             cv2.putText(frame, "FRAME CAPTURED", (30,200), cv2.FONT_HERSHEY_COMPLEX, 3, (0, 0, 255), 1)
@@ -60,7 +59,7 @@ import numpy as np
 from scipy.stats import linregress
 import matplotlib.pyplot as plt
 horizontal_ratios_samples = np.array(horizontal_ratios_samples)
-vertical_ratios_samples = np.array(horizontal_ratios_samples)
+vertical_ratios_samples = np.array(vertical_ratios_samples)
 pixel_x_samples = np.array(pixel_x_samples)
 pixel_y_samples = np.array(pixel_y_samples)
 
@@ -73,7 +72,8 @@ def regression_line(x_samples, y_samples, title, x_label, y_label):
     y_values = slope * x_values + intercept
     
     # Plot the data points and regression line
-    plt.scatter(pixel_x_samples, horizontal_ratios_samples, label='Camera Pixel')
+    plt.clf()
+    plt.scatter(x_samples, y_samples, label='Camera Pixel')
     plt.plot(x_values, y_values, color='red', label='Regression Line')
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -90,4 +90,4 @@ def regression_line(x_samples, y_samples, title, x_label, y_label):
 print("<-- Horizontal Params: -->")
 regression_line(pixel_x_samples, horizontal_ratios_samples, "Camera Horizontal Param", "Pixel X", "(Horizontal Displacement / Distance) Ratio")
 print("<-- Vertical Params: -->")
-regression_line(pixel_y_samples, vertical_ratios_samples, "Camera Horizontal Param", "Pixel Y", "(Vertical Displacement / Distance) Ratio")
+regression_line(pixel_y_samples, vertical_ratios_samples, "Camera Vertical Param", "Pixel Y", "(Vertical Displacement / Distance) Ratio")

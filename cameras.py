@@ -38,7 +38,7 @@ class USBCamera:
                 else:
                     self.image = new_frame
 
-                self.gray = cv2.cvtColor(new_frame, cv2.COLOR_BGR2GRAY)
+                self.gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
                 if time() - fps_last_calculated > 1:
                     fps = round(frames_count / (time()-fps_last_calculated))
