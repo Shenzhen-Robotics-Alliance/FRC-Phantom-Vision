@@ -9,7 +9,7 @@ CROSSHAIR_LENGTH = 30
 CROSSHAIR_COLOR = (0, 255, 0)
 CROSSHAIR_THICKNESS = 2
 
-import cv2, threading, sys, cameras
+import cv2, threading, sys, cameras, positioncalculator
 import numpy as np
 from time import time, sleep
 # import apriltag
@@ -64,6 +64,10 @@ def detect_once():
         for side in range(4):
             cv2.line(frame, corners_pos[side-1], corners_pos[side], (0, 255, 0), 3)
         center = tag.center
+
+        print("tag center: ", tag.center)
+        print(f"<-- tag {tag.tag_id} have realtive position {positioncalculator.get_relative_position_to_robot(40, tag.center[0]-CAMERA_RESOLUTION[0]/2, tag.center[1]-CAMERA_RESOLUTION[1]/2)}")
+
         area = (right - left) * (bottom - top)
         cv2.putText(frame, f"{tag.tag_id}", (int(center[0]-40), int(center[1])), cv2.FONT_HERSHEY_COMPLEX, 2.0, (100,200,200), 5)
         # detection_results += f"\n{tag.tag_id} {center[0]} {center[1]} {corners_pos[0][0]} {corners_pos[0][1]} {corners_pos[1][0]} {corners_pos[1][1]} {corners_pos[2][0]} {corners_pos[2][1]} {corners_pos[3][0]} {corners_pos[3][1]}"
