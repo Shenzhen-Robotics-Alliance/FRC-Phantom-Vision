@@ -10,15 +10,17 @@ class Vector2D:
         elif len(args) == 2:
             heading, magnitude = args
             self.array = np.array([math.cos(heading) * magnitude, math.sin(heading) * magnitude])
+        else:
+            raise ValueError("Expected at most two arguments, got more.")
 
-    def get_value(self) -> np.ndarray:
+    def get_value(self) -> list:
         """
         Get the value of the vector.
 
         Returns:
         - np.ndarray: A numpy array representing the vector with two elements [x, y].
         """
-        return self.array
+        return self.array.tolist()
 
     def get_x(self) -> float:
         """
@@ -45,9 +47,9 @@ class Vector2D:
         Parameters:
         - new_vector: A numpy array representing the new value of the vector with two elements [x, y].
         """
-        self.array = np.array(new_vector.array)
+        self.array = new_vector.array
 
-    def multiply_by(self, transformation: 'Transformation2D') -> np.ndarray:
+    def multiply_by(self, transformation: 'Transformation2D') -> 'Vector2D':
         """
         Multiply the vector by a transformation.
 
@@ -55,11 +57,11 @@ class Vector2D:
         - transformation: A 2x2 numpy array representing the transformation matrix.
 
         Returns:
-        - np.ndarray: The resulting vector after multiplication.
+        - Vector2D: The resulting vector after multiplication.
         """
-        return np.dot(transformation.array, self.array)
+        return transformation.multiply(self)
 
-    def multiply_by_scalar(self, scaler: float) -> np.ndarray:
+    def multiply_by_scalar(self, scaler: float) -> 'Vector2D':
         """
         Scale the vector by a scalar value.
 
@@ -67,11 +69,11 @@ class Vector2D:
         - scaler: The scalar value to multiply the vector by.
 
         Returns:
-        - np.ndarray: The resulting vector after scaling.
+        - Vector2D: The resulting vector after scaling.
         """
-        return scaler * self.array
+        return Vector2D(scaler * self.array)
 
-    def add_by(self, adder: np.ndarray) -> np.ndarray:
+    def add_by(self, adder: 'Vector2D') -> 'Vector2D':
         """
         Add another vector to the current vector.
 
@@ -79,9 +81,9 @@ class Vector2D:
         - adder: A numpy array representing the vector to add.
 
         Returns:
-        - np.ndarray: The resulting vector after addition.
+        - Vector2D: The resulting vector after addition.
         """
-        return self.array + adder
+        return Vector2D(self.array + adder.array)
 
     def get_heading(self) -> float:
         """
@@ -144,8 +146,12 @@ class Transformation2D:
         """
         if len(args) == 0:
             self.array = Transformation2D.get_original_space()
-        else:
+        elif len(args) == 1:
             self.array = np.array(args[0])
+        elif len(args) == 2:
+            self.array = np.array([list(args[0]), list[args[1]]])
+        else:
+            raise ValueError("Expected at most two arguments, got more.")
 
     def set_value(self, value:list) -> None:
         """
@@ -156,16 +162,16 @@ class Transformation2D:
         """
         self.array = np.array(value)
 
-    def get_value(self) -> np.ndarray:
+    def get_value(self) -> list:
         """
         Get the value of the transformation.
 
         Returns:
         - np.ndarray: A 2x2 numpy array representing the transformation matrix.
         """
-        return self.array
+        return self.array.tolist()
 
-    def multiply(self, vector: 'Vector2D') -> np.ndarray:
+    def multiply(self, vector: 'Vector2D') -> 'Vector2D':
         """
         Apply the transformation to a given vector.
 
@@ -175,7 +181,7 @@ class Transformation2D:
         Returns:
         - np.ndarray: The transformed vector.
         """
-        return np.dot(self.array, vector.array)
+        return Vector2D(np.dot(self.array, vector.array))
 
     def get_determinant(self) -> float:
         """
@@ -186,14 +192,14 @@ class Transformation2D:
         """
         return np.linalg.det(self.array)
 
-    def get_reversal(self) -> np.ndarray:
+    def get_reversal(self) -> 'Transformation2D':
         """
         Get the reversal of the transformation.
 
         Returns:
         - np.ndarray: The reversal of the transformation as a 2x2 numpy array.
         """
-        return np.linalg.inv(self.array)
+        return Transformation2D(np.linalg.inv(self.array))
 
     def __str__(self) -> str:
         """

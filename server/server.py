@@ -3,14 +3,25 @@ PORT = 8888
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from time import time, sleep
+from urllib.parse import ParseResult, urlparse
+from MathUtils.LinearAlgebra import *
 import apriltagdetection, cv2
 import threading
+
+def get_request_param(parsed_path:ParseResult, param_name:str) -> float:
+    if param_name not in parsed_path.query:
+        return 0
+    return float(parsed_path.query[param_name])
+
+robot_odometry_position = Vector2D()
+robot_odometry_rotation = Rotation2D(0)
 
 # MJPEG Streaming Server
 class StreamingHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         print(f"<--client visited {self.path} -->")
-        if self.path == "/":
+        parsed_path = urlparse(self.path)
+        if parsed_path.path == "/":
             # Return the main page (index.html)
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -19,7 +30,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             with open('./webpages/index.html', 'rb') as f:
                 content = f.read()
             self.wfile.write(content)
-        elif self.path == '/fps':
+        elif parsed_path.path == '/fps':
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
@@ -30,7 +41,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             else:
                 print("Returning FPS to webpage: ", fps)
                 self.wfile.write( ("Detector FPS: " + str(fps))  .encode())
-        elif self.path == '/video_feed':
+        elif parsed_path.path == '/video_feed':
             self.send_response(200)
             self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
             self.end_headers()
@@ -43,7 +54,17 @@ class StreamingHandler(SimpleHTTPRequestHandler):
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
-        elif self.path == '/results':
+        elif parsed_path.path == '/results':
+            global robot_odometry_position, robot_odometry_rotation
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'),get_request_param(parsed_path, 'robot_odometry_y')])
+            robot_odometry_rotation = Rotation2D(get_request_param(parsed_path, 'robot_odometry_rotation'))
+
+            self.wfile.write(apriltagdetection.get_results().encode()) # TODO: return accurate result of robot position and gamepiece detections
+
+        elif parsed_path.path == '/results_legacy':
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
@@ -53,7 +74,12 @@ class StreamingHandler(SimpleHTTPRequestHandler):
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
-                
+        else:
+            # Respond with a 404 Not Found status and custom message
+            self.send_response(404)  # Send 404 Not Found status
+            self.send_header('Content-Type', 'text/html')  # Specify the content type as HTML
+            self.end_headers()
+            self.wfile.write(b"<html><head><title>Not Found</title></head><body><h1>Page not found</h1></body></html>")
 
     def send_frame(self, frame):
         boundary = b'frame'
