@@ -1,7 +1,8 @@
-import cv2, sys, threading
+import cv2, sys, threading, os
 from time import time
 
-no_result = cv2.imread("./webpages/no_result.png")
+SERVER_ROOT = os.path.split(os.path.realpath(__file__))[0]
+no_result = cv2.imread(os.path.join(SERVER_ROOT, "./webpages/no_result.png"))
 class USBCamera:
     def __init__(self, portID:int, resolution:tuple, frame_rate:int, flip_code):
         if sys.platform.startswith('linux'):

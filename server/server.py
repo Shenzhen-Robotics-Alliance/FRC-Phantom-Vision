@@ -5,8 +5,10 @@ from socketserver import ThreadingMixIn
 from time import time, sleep
 from urllib.parse import ParseResult, urlparse
 from MathUtils.LinearAlgebra import *
-import apriltagdetection, cv2
-import threading
+import apriltagdetection, cv2, threading, os
+
+SERVER_ROOT = os.path.split(os.path.realpath(__file__))[0]
+print("server root: ", SERVER_ROOT)
 
 def get_request_param(parsed_path:ParseResult, param_name:str) -> float:
     if param_name not in parsed_path.query:
@@ -27,7 +29,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             # with open('/home/ironn-maple/index.html', 'rb') as f:
-            with open('./webpages/index.html', 'rb') as f:
+            with open(os.path.join(SERVER_ROOT, 'webpages', 'index.html'), 'rb') as f:
                 content = f.read()
             self.wfile.write(content)
         elif parsed_path.path == '/fps':
