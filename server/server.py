@@ -61,7 +61,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
-            robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'),get_request_param(parsed_path, 'robot_odometry_y')])
+            robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'), get_request_param(parsed_path, 'robot_odometry_y')])
             robot_odometry_rotation = Rotation2D(get_request_param(parsed_path, 'robot_odometry_rotation'))
 
             self.wfile.write(apriltagdetection.get_results().encode()) # TODO: return accurate result of robot position and gamepiece detections

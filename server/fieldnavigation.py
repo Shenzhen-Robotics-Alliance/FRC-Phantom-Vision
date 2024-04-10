@@ -1,4 +1,4 @@
-from server.MathUtils.LinearAlgebra import *
+from MathUtils.LinearAlgebra import *
 
 
 class TagOnField:
@@ -33,8 +33,12 @@ def inches_to_meters(value):
     return value * 0.0254
 
 # Populating the tags_on_field dictionary
+rst = []
 for id, x, y, z in tags_data:
+    rst.append((id, inches_to_meters(x), inches_to_meters(y)))
     tags_on_field[id] = TagOnField(Vector2D([inches_to_meters(x), inches_to_meters(y)]), inches_to_meters(z))
+
+print(rst)
 
 def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot:Vector2D, robot_facing:Rotation2D):
     tag_field_position = tags_on_field[id].position
