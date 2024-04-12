@@ -46,3 +46,5 @@ def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot
     robot_relative_position_to_tag_field_oriented = tag_relative_position_to_robot_field_oriented.multiply_by(-1)
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
+def process_results(tags:list):
+    

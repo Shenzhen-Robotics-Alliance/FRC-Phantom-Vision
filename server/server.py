@@ -17,6 +17,8 @@ def get_request_param(parsed_path:ParseResult, param_name:str) -> float:
 
 robot_odometry_position = Vector2D()
 robot_odometry_rotation = Rotation2D(0)
+robot_visual_position = Vector2D()
+robot_odometry_position_last_navigation = Vector2D()
 
 # MJPEG Streaming Server
 class StreamingHandler(SimpleHTTPRequestHandler):
@@ -64,6 +66,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'), get_request_param(parsed_path, 'robot_odometry_y')])
             robot_odometry_rotation = Rotation2D(get_request_param(parsed_path, 'robot_odometry_rotation'))
 
+            
             self.wfile.write(apriltagdetection.get_results().encode()) # TODO: return accurate result of robot position and gamepiece detections
 
         elif parsed_path.path == '/results_legacy':
