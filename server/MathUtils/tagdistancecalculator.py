@@ -1,5 +1,5 @@
 from math import *
-from MathUtils.LinearAlgebra import Vector2D
+from LinearAlgebra import Vector2D
 
 horizontal_projection_ratio = 0.0019083090502545134
 vertical_projection_ratio = -0.0018938381148259048

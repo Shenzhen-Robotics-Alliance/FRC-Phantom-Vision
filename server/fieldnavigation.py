@@ -1,5 +1,6 @@
 from MathUtils.LinearAlgebra import *
-import tagdistancecalculator as cal
+import MathUtils.tagdistancecalculator as cal, apriltagdetection as detection
+from networktables import NetworkTables
 
 
 class TagOnField:
@@ -54,8 +55,21 @@ def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
 def process_results(tags:list, camera_resolution:tuple):
+    global robot_visual_position
     estimationSums = Vector2D()
     for tag in tags:
         relative_position = cal.get_relative_position_to_robot(tags_on_field[tag.id].height, tag.x-camera_resolution[0]/2, tag.y-camera_resolution[1]/2)
         estimate = get_robot_position_via_navigation_tag(tag.id, relative_position, robot_odometry_rotation)
         estimationSums = estimationSums.add_by(estimate)
+    if len(tags) == 0:
+        robot_visual_position = -1
+    else:
+        robot_visual_position = estimationSums.multiply_by(1/len(tags))
+
+def pull_odometry_data_from_networktable():
+    # TODO get the odomotry data from networktable
+    pass
+
+def send_results_to_networktable():
+    # TODO send results to network table, if vision is trustable, use vision, otherwise, use odomotry
+    pass

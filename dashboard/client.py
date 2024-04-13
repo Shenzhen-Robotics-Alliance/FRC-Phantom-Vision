@@ -1,4 +1,7 @@
-import pygame, sys
+import pygame, sys, requests
+
+# SERVER_URL = "http://onbot-jetson.local:5801"
+SERVER_URL = "http://localhost:5801"
 
 # Initialize Pygame
 pygame.init()
@@ -56,13 +59,19 @@ def get_robot_field_position() -> tuple:
     '''
     returns: the field position of the robot, in (x,y) and in meters
     '''
-    # ...
-    return (3, 3) # for testing
+    response = requests.get(SERVER_URL + '/robot_pos')
+    print(response.text.split()[0], response.text.split()[1])
 
-def get_robot_field_rotation() -> float:
+    return (float(response.text.split()[0]), float(response.text.split()[1]))
+
+def get_robot_rotation() -> float:
     '''
     returns: the facing of the robot, in radian. zero is facing front and positive is counter-clockwise
     '''
+    response = requests.get(SERVER_URL + '/robot_rot')
+    print(response.text)
+    
+    return float(response.text)
 
 # Main loop
 while True:
@@ -71,6 +80,9 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+
+    get_robot_field_position()
+    get_robot_rotation()
 
     # Update the display
     pygame.display.update()

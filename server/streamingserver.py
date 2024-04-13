@@ -1,11 +1,12 @@
-PORT = 8888
+WEB_PORT = 5800
+NETWORKTABLE_PORT = 5801
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from time import time, sleep
 from urllib.parse import ParseResult, urlparse
 from MathUtils.LinearAlgebra import *
-import apriltagdetection, fieldnavigation, cv2, threading, os
+import cv2, threading, os, apriltagdetection
 
 SERVER_ROOT = os.path.split(os.path.realpath(__file__))[0]
 print("server root: ", SERVER_ROOT)
@@ -53,17 +54,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
-        elif parsed_path.path == '/results':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            fieldnavigation.robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'), get_request_param(parsed_path, 'robot_odometry_y')])
-            fieldnavigation.robot_odometry_rotation = Rotation2D(get_request_param(parsed_path, 'robot_odometry_rotation'))
-
-            
-            self.wfile.write(apriltagdetection.get_results().encode()) # TODO: return accurate result of robot position and gamepiece detections
-
-        elif parsed_path.path == '/results_legacy':
+        elif parsed_path.path == '/tag_boxes':
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
@@ -90,25 +81,18 @@ class StreamingHandler(SimpleHTTPRequestHandler):
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
-
-# Start the HTTP server in a separate thread
-print("<-- starting inspector server... -->")
-httpd = ThreadedHTTPServer(('0.0.0.0', PORT), StreamingHandler)
+httpd = ThreadedHTTPServer(('0.0.0.0', WEB_PORT), StreamingHandler)
 server_thread = threading.Thread(target=httpd.serve_forever)
 server_thread.daemon = True
-server_thread.start()
-print("<-- inspector server started -->")
 
-apriltagdetection.start_detections()
-while True:
-    try:
-        sleep(0.05)
-    except KeyboardInterrupt:
-        print("<-- user interrupt, shutting down... -->")
-        apriltagdetection.running = False
-        httpd.shutdown()
-        apriltagdetection.stop_detection()
-        server_thread.join()
-        break
+def start_streaming_server():
+    # Start the HTTP server in a separate thread
+    print("<-- starting inspector server... -->")
+    server_thread.start()
+    print("<-- inspector server started -->")
 
-print("<-- shutdown complete, program exits... --> ")
+def stop_streaming_server():
+    print("<-- shutting down streaming server -->")
+    httpd.shutdown()
+    server_thread.join()
+    print("<-- streaming server shutdown complete -->")
