@@ -1,4 +1,5 @@
 from MathUtils.LinearAlgebra import *
+import tagdistancecalculator as cal
 
 
 class TagOnField:
@@ -40,11 +41,21 @@ for id, x, y, z in tags_data:
 
 print(rst)
 
+
+robot_odometry_position = Vector2D()
+robot_odometry_rotation = Rotation2D(0)
+robot_visual_position = Vector2D()
+robot_odometry_position_last_navigation = Vector2D()
+
 def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot:Vector2D, robot_facing:Rotation2D):
     tag_field_position = tags_on_field[id].position
     tag_relative_position_to_robot_field_oriented = tag_relative_position_to_robot.multiply_by(robot_facing)
     robot_relative_position_to_tag_field_oriented = tag_relative_position_to_robot_field_oriented.multiply_by(-1)
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
-def process_results(tags:list):
-    
+def process_results(tags:list, camera_resolution:tuple):
+    estimationSums = Vector2D()
+    for tag in tags:
+        relative_position = cal.get_relative_position_to_robot(tags_on_field[tag.id].height, tag.x-camera_resolution[0]/2, tag.y-camera_resolution[1]/2)
+        estimate = get_robot_position_via_navigation_tag(tag.id, relative_position, robot_odometry_rotation)
+        estimationSums = estimationSums.add_by(estimate)

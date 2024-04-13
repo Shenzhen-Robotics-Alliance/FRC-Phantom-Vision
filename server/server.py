@@ -5,7 +5,7 @@ from socketserver import ThreadingMixIn
 from time import time, sleep
 from urllib.parse import ParseResult, urlparse
 from MathUtils.LinearAlgebra import *
-import apriltagdetection, cv2, threading, os
+import apriltagdetection, fieldnavigation, cv2, threading, os
 
 SERVER_ROOT = os.path.split(os.path.realpath(__file__))[0]
 print("server root: ", SERVER_ROOT)
@@ -14,11 +14,6 @@ def get_request_param(parsed_path:ParseResult, param_name:str) -> float:
     if param_name not in parsed_path.query:
         return 0
     return float(parsed_path.query[param_name])
-
-robot_odometry_position = Vector2D()
-robot_odometry_rotation = Rotation2D(0)
-robot_visual_position = Vector2D()
-robot_odometry_position_last_navigation = Vector2D()
 
 # MJPEG Streaming Server
 class StreamingHandler(SimpleHTTPRequestHandler):
@@ -59,12 +54,11 @@ class StreamingHandler(SimpleHTTPRequestHandler):
                     print("client disconnected")
                     return
         elif parsed_path.path == '/results':
-            global robot_odometry_position, robot_odometry_rotation
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
-            robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'), get_request_param(parsed_path, 'robot_odometry_y')])
-            robot_odometry_rotation = Rotation2D(get_request_param(parsed_path, 'robot_odometry_rotation'))
+            fieldnavigation.robot_odometry_position = Vector2D([get_request_param(parsed_path, 'robot_odometry_x'), get_request_param(parsed_path, 'robot_odometry_y')])
+            fieldnavigation.robot_odometry_rotation = Rotation2D(get_request_param(parsed_path, 'robot_odometry_rotation'))
 
             
             self.wfile.write(apriltagdetection.get_results().encode()) # TODO: return accurate result of robot position and gamepiece detections
