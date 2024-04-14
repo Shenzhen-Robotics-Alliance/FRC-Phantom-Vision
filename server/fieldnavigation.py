@@ -1,5 +1,5 @@
 from MathUtils.LinearAlgebra import *
-import MathUtils.tagdistancecalculator as cal, apriltagdetection as detection
+import MathUtils.tagdistancecalculator as cal
 from networktables import NetworkTables
 
 
@@ -78,7 +78,9 @@ def pull_odometry_data_from_networktable():
 
 def send_results_to_networktable():
     if robot_visual_position == -1:
-        return
-    robot_pos_x.setDouble(robot_visual_position.get_x())
-    robot_pos_y.setDouble(robot_visual_position.get_y())
-    robot_rot.setDouble(robot_rot)
+        robot_pos_x.setDouble(5.0)
+        robot_pos_y.setDouble(5.0)
+    else:
+        robot_pos_x.setDouble(robot_visual_position.get_x())
+        robot_pos_y.setDouble(robot_visual_position.get_y())
+    robot_rot.setDouble(robot_odometry_rotation.get_radian())

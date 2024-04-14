@@ -131,8 +131,8 @@ try:
             
         NetworkTables.flush()
 
-        # draw_robot(get_robot_field_position(), get_robot_rotation(), window)
-        draw_robot((5, 5), 0)
+        draw_robot(get_robot_field_position(), get_robot_rotation(), window)
+        # draw_robot((5, 5), 0)
 
         # Update the display
         pygame.display.update()

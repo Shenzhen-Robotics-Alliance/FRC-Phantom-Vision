@@ -9,7 +9,7 @@ CROSSHAIR_LENGTH = 30
 CROSSHAIR_COLOR = (0, 255, 0)
 CROSSHAIR_THICKNESS = 2
 
-import cv2, threading, sys, cameras, server.MathUtils.tagdistancecalculator as tagdistancecalculator, fieldnavigation
+import cv2, threading, sys, cameras, MathUtils.tagdistancecalculator as tagdistancecalculator, fieldnavigation
 import numpy as np
 from time import time, sleep
 # import apriltag
