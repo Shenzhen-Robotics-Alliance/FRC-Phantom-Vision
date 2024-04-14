@@ -81,56 +81,62 @@ def get_robot_rotation() -> float:
     return robot_rot.getDouble(0)
 
 # Function to draw the robot on the dashboard
-def draw_robot(robot_pos, robot_rotation, window):
-    # Define robot dimensions
-    head_radius = 0.05  # meters (size of the dot representing the head)
+ROBOT_DISPLAY_LENGTH_METERS = 0.7
+ROBOT_DISPLAY_WIDTH_METERS = 0.6
+def draw_robot(robot_pos, robot_rotation):
+     # Calculate the robot's pixel position
+    pixel_pos = field_to_pixel(robot_pos, WINDOW_WIDTH, WINDOW_HEIGHT)
 
-    # Convert robot position from field coordinates to pixel coordinates
-    pixel_x, pixel_y = field_to_pixel(robot_pos, WINDOW_WIDTH, WINDOW_HEIGHT)
+    # Dimensions of the robot rectangle in pixels
+    pixel_width = field_to_pixel((ROBOT_DISPLAY_LENGTH_METERS, 0), WINDOW_WIDTH, WINDOW_HEIGHT)[0] - field_to_pixel((0, 0), WINDOW_WIDTH, WINDOW_HEIGHT)[0]
+    pixel_length = field_to_pixel((0, ROBOT_DISPLAY_WIDTH_METERS), WINDOW_WIDTH, WINDOW_HEIGHT)[1] - field_to_pixel((0, 0), WINDOW_WIDTH, WINDOW_HEIGHT)[1]
 
-    # Calculate the center of the rectangle
-    center = (pixel_x, pixel_y)
+    # Calculate rectangle corners before rotation
+    rect_corners = [
+        (-pixel_width / 2, -pixel_length / 2),
+        (pixel_width / 2, -pixel_length / 2),
+        (pixel_width / 2, pixel_length / 2),
+        (-pixel_width / 2, pixel_length / 2)
+    ]
 
-    # Calculate the size of the rectangle
-    size = (robot_width * WINDOW_WIDTH / FIELD_WIDTH, robot_length * WINDOW_HEIGHT / FIELD_HEIGHT)
+    # Rotate corners and translate to actual position
+    rotated_corners = [
+        (math.cos(robot_rotation) * x - math.sin(robot_rotation) * y + pixel_pos[0],
+         math.sin(robot_rotation) * x + math.cos(robot_rotation) * y + pixel_pos[1])
+        for x, y in rect_corners
+    ]
 
-    # Create the rectangle surface
-    rect_surface = pygame.Surface(size)
-    rect_surface.fill((0, 255, 0))  # Green color for the robot body
+    # Draw robot rectangle
+    pygame.draw.polygon(window, (255, 0, 0), rotated_corners)
 
-    # Rotate the rectangle surface
-    rotated_surface = pygame.transform.rotate(rect_surface, math.degrees(robot_rotation))
+    # Calculate midpoint of the front edge for the "head" dot
+    front_mid = (
+        (rotated_corners[1][0] + rotated_corners[2][0]) / 2,
+        (rotated_corners[1][1] + rotated_corners[2][1]) / 2
+    )
 
-    # Get the rect of the rotated surface and set its center
-    rect = rotated_surface.get_rect(center=center)
+    # Draw head dot
+    pygame.draw.circle(window, (0, 255, 0), (int(front_mid[0]), int(front_mid[1])), 5)  # 5 pixels radius for the dot
 
-    # Draw the rotated rectangle onto the window
-    window.blit(rotated_surface, rect.topleft)
-
-    # Calculate the position of the head (center of one of the line segments)
-    head_x = (rect.topleft[0] + rect.topright[0]) // 2
-    head_y = (rect.topleft[1] + rect.topright[1]) // 2
-
-    # Draw robot head (dot)
-    pygame.draw.circle(window, (255, 0, 0), (head_x, head_y), int(head_radius * WINDOW_WIDTH / FIELD_WIDTH))
-
-    print("added robot to dashboard")
 
 fps = 60
 clock = pygame.time.Clock()
-while True:
-    # Check for events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        
-    NetworkTables.flush()
+try:
+    while True:
+        # Check for events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+        NetworkTables.flush()
 
-    # draw_robot(get_robot_field_position(), get_robot_rotation(), window)
-    draw_robot((5, 5), 0, window)
+        # draw_robot(get_robot_field_position(), get_robot_rotation(), window)
+        draw_robot((5, 5), 0)
 
-    # Update the display
-    pygame.display.update()
+        # Update the display
+        pygame.display.update()
 
-    clock.tick(fps)
+        clock.tick(fps)
+except KeyboardInterrupt:
+    print("user interrupt, exiting...")
