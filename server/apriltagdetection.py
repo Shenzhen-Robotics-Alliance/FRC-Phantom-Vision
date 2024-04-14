@@ -97,7 +97,6 @@ def generate_forever():
         lock.acquire()
         
         detect_once()
-        fieldnavigation.process_results(tags, CAMERA_RESOLUTION)
 
         lock.release()
 

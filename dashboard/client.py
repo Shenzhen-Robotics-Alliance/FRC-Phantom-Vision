@@ -1,7 +1,19 @@
-import pygame, sys, requests
+import pygame, sys, math
+from networktables import NetworkTables
 
-# SERVER_URL = "http://onbot-jetson.local:5801"
-SERVER_URL = "http://localhost:5801"
+
+robot_width = 0.5  # meters
+robot_length = 0.5  # meters
+# SERVER_URL = "onbot-jetson.local"
+SERVER = "localhost"
+
+
+
+NetworkTables.initialize()
+NetworkTables.startClient(SERVER)
+robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
+robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
+robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
 
 # Initialize Pygame
 pygame.init()
@@ -18,7 +30,7 @@ WINDOW_HEIGHT = 600
 WINDOW_WIDTH = int(WINDOW_HEIGHT * aspect_ratio)
 
 # Load the field image and scale it to fit the window
-field_image = pygame.image.load("client/2024_Field_Dark.png")
+field_image = pygame.image.load("dashboard/2024_Field_Dark.png")
 field_image = pygame.transform.scale(field_image, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
 # Create the window
@@ -59,30 +71,66 @@ def get_robot_field_position() -> tuple:
     '''
     returns: the field position of the robot, in (x,y) and in meters
     '''
-    response = requests.get(SERVER_URL + '/robot_pos')
-    print(response.text.split()[0], response.text.split()[1])
+    return (robot_pos_x.getDouble(0), robot_pos_y.getDouble(0))
 
-    return (float(response.text.split()[0]), float(response.text.split()[1]))
 
 def get_robot_rotation() -> float:
     '''
     returns: the facing of the robot, in radian. zero is facing front and positive is counter-clockwise
     '''
-    response = requests.get(SERVER_URL + '/robot_rot')
-    print(response.text)
-    
-    return float(response.text)
+    return robot_rot.getDouble(0)
 
-# Main loop
+# Function to draw the robot on the dashboard
+def draw_robot(robot_pos, robot_rotation, window):
+    # Define robot dimensions
+    head_radius = 0.05  # meters (size of the dot representing the head)
+
+    # Convert robot position from field coordinates to pixel coordinates
+    pixel_x, pixel_y = field_to_pixel(robot_pos, WINDOW_WIDTH, WINDOW_HEIGHT)
+
+    # Calculate the center of the rectangle
+    center = (pixel_x, pixel_y)
+
+    # Calculate the size of the rectangle
+    size = (robot_width * WINDOW_WIDTH / FIELD_WIDTH, robot_length * WINDOW_HEIGHT / FIELD_HEIGHT)
+
+    # Create the rectangle surface
+    rect_surface = pygame.Surface(size)
+    rect_surface.fill((0, 255, 0))  # Green color for the robot body
+
+    # Rotate the rectangle surface
+    rotated_surface = pygame.transform.rotate(rect_surface, math.degrees(robot_rotation))
+
+    # Get the rect of the rotated surface and set its center
+    rect = rotated_surface.get_rect(center=center)
+
+    # Draw the rotated rectangle onto the window
+    window.blit(rotated_surface, rect.topleft)
+
+    # Calculate the position of the head (center of one of the line segments)
+    head_x = (rect.topleft[0] + rect.topright[0]) // 2
+    head_y = (rect.topleft[1] + rect.topright[1]) // 2
+
+    # Draw robot head (dot)
+    pygame.draw.circle(window, (255, 0, 0), (head_x, head_y), int(head_radius * WINDOW_WIDTH / FIELD_WIDTH))
+
+    print("added robot to dashboard")
+
+fps = 60
+clock = pygame.time.Clock()
 while True:
     # Check for events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        
+    NetworkTables.flush()
 
-    get_robot_field_position()
-    get_robot_rotation()
+    # draw_robot(get_robot_field_position(), get_robot_rotation(), window)
+    draw_robot((5, 5), 0, window)
 
     # Update the display
     pygame.display.update()
+
+    clock.tick(fps)
