@@ -66,10 +66,19 @@ def process_results(tags:list, camera_resolution:tuple):
     else:
         robot_visual_position = estimationSums.multiply_by(1/len(tags))
 
+
+NetworkTables.initialize()
+robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
+robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
+robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
+
 def pull_odometry_data_from_networktable():
     # TODO get the odomotry data from networktable
     pass
 
 def send_results_to_networktable():
-    # TODO send results to network table, if vision is trustable, use vision, otherwise, use odomotry
-    pass
+    if robot_visual_position == -1:
+        return
+    robot_pos_x.setDouble(robot_visual_position.get_x())
+    robot_pos_y.setDouble(robot_visual_position.get_y())
+    robot_rot.setDouble(robot_rot)
