@@ -1,5 +1,5 @@
 from MathUtils.LinearAlgebra import *
-import MathUtils.tagdistancecalculator as cal, logging
+import MathUtils.tagdistancecalculatorlegacy as cal, logging
 from networktables import NetworkTables
 
 
@@ -78,12 +78,19 @@ NetworkTables.initialize()
 NetworkTables.startServer(listenAddress="0.0.0.0")
 robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
 robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
-robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
 tags_visibility_table = NetworkTables.getTable("Vision").getEntry("tags_visibility")
 
+odomoter_pos_x_entry = NetworkTables.getTable("Vision").getEntry("odometer_x")
+odometer_pos_y_entry = NetworkTables.getTable("Vision").getEntry("odometer_pos_y")
+robot_rot_entry = NetworkTables.getTable("Vision").getEntry("robot_rotation")
+
 def pull_odometry_data_from_networktable():
-    # TODO get the odomotry data from networktable
-    pass
+    global robot_odometry_position, robot_odometry_rotation
+    robot_odometry_position = Vector2D((
+        odomoter_pos_x_entry.getDouble(robot_odometry_position.get_x()),
+        odometer_pos_y_entry.getDouble(robot_odometry_position.get_y()) 
+    ))
+    robot_odometry_rotation = Rotation2D(robot_rot_entry.getDouble(robot_odometry_rotation.get_radian()))
 
 def send_results_to_networktable():
     tags_visibility = [False for i in range(16)]
@@ -97,4 +104,3 @@ def send_results_to_networktable():
     else:
         robot_pos_x.setDouble(robot_visual_position.get_x())
         robot_pos_y.setDouble(robot_visual_position.get_y())
-    robot_rot.setDouble(robot_odometry_rotation.get_radian())

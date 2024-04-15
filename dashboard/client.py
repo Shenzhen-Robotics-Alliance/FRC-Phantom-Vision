@@ -4,8 +4,8 @@ from networktables import NetworkTables
 
 robot_width = 0.5  # meters
 robot_length = 0.5  # meters
-# SERVER = "onbot-jetson.local"
-SERVER = "localhost"
+SERVER = "onbot-jetson.local"
+# SERVER = "localhost"
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -13,7 +13,7 @@ NetworkTables.startClient(SERVER)
 NetworkTables.initialize()
 robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
 robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
-robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
+robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rotation")
 tags_visibility_table = NetworkTables.getTable("Vision").getEntry("tags_visibility")
 
 # Initialize Pygame
@@ -134,6 +134,8 @@ def draw_robot(robot_pos, robot_rotation) -> tuple:
     '''
     returns: the position of the dot, that represents the robot's head
     '''
+
+    robot_rotation *= -1
      # Calculate the robot's pixel position
     pixel_pos = field_to_pixel(robot_pos, WINDOW_WIDTH, WINDOW_HEIGHT)
 
