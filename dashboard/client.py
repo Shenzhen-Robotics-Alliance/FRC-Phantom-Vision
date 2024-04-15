@@ -144,10 +144,3 @@ try:
         clock.tick(fps)
 except KeyboardInterrupt:
     print("user interrupt, exiting...")
-
-'''
-now the problem is, even though I executed the line NetworkTables.startClient(SERVER)
-but the logging of the client still says "DEBUG:nt:Listening on  1735"
-which means, the NetworkTables library misunderstand my operation and started a server on localhost
-how can I solve this bug?
-'''

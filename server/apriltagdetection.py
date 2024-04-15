@@ -1,4 +1,4 @@
-CAM_PORT = 0
+CAM_PORT = 1
 CAMERA_RESOLUTION = (640, 480)
 CAMERA_FRAMERATE = 60
 STREAMING_RESOLUTION = (160, 120)
@@ -27,7 +27,7 @@ print("<-- apriltag camera and detector ready -->")
 running = True
 frame = cameras.no_result
 frame_resized = cameras.no_result
-tags = None
+tags = []
 detection_results = "<no results yet>"
 frame_time_total = 0
 frame_time_samplecount = 0
@@ -44,7 +44,7 @@ def detect_once():
     dt = time()
     tags = detector.detect(gray)
     # print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
-
+    
     dt = time()
     # mark apriltags and add detection results
     detection_results = ""
@@ -65,8 +65,9 @@ def detect_once():
             cv2.line(frame, corners_pos[side-1], corners_pos[side], (0, 255, 0), 3)
         center = tag.center
 
-        print("tag center: ", tag.center)
-        print(f"<-- tag {tag.tag_id} have realtive position {tagdistancecalculator.get_relative_position_to_robot(40, tag.center[0]-CAMERA_RESOLUTION[0]/2, tag.center[1]-CAMERA_RESOLUTION[1]/2)}")
+        # print("tag center: ", tag.center)
+        
+        # print(f"<-- tag {tag.tag_id} have realtive position {tagdistancecalculator.get_relative_position_to_robot(40, tag.center[0]-CAMERA_RESOLUTION[0]/2, tag.center[1]-CAMERA_RESOLUTION[1]/2)}")
 
         area = (right - left) * (bottom - top)
         cv2.putText(frame, f"{tag.tag_id}", (int(center[0]-40), int(center[1])), cv2.FONT_HERSHEY_COMPLEX, 2.0, (100,200,200), 5)

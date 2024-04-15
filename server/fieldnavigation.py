@@ -43,28 +43,31 @@ for id, x, y, z in tags_data:
 print(rst)
 
 
-robot_odometry_position = Vector2D()
+robot_odometry_position = Vector2D((7.2,4.8))
 robot_odometry_rotation = Rotation2D(0)
-robot_visual_position = Vector2D()
+robot_visual_position = -1
 robot_odometry_position_last_navigation = Vector2D()
 
 def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot:Vector2D, robot_facing:Rotation2D):
-    tag_field_position = tags_on_field[id].position
-    tag_relative_position_to_robot_field_oriented = tag_relative_position_to_robot.multiply_by(robot_facing)
-    robot_relative_position_to_tag_field_oriented = tag_relative_position_to_robot_field_oriented.multiply_by(-1)
+    tag_field_position = tags_on_field[id].position_on_field
+    tag_relative_position_to_robot_field_oriented = tag_relative_position_to_robot.multiply_by(robot_facing).multiply_by(Rotation2D(math.radians(90)))
+    robot_relative_position_to_tag_field_oriented = tag_relative_position_to_robot_field_oriented.multiply_by_scalar(-1)
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
 def process_results(tags:list, camera_resolution:tuple):
     global robot_visual_position
     estimationSums = Vector2D()
     for tag in tags:
-        relative_position = cal.get_relative_position_to_robot(tags_on_field[tag.id].height, tag.x-camera_resolution[0]/2, tag.y-camera_resolution[1]/2)
-        estimate = get_robot_position_via_navigation_tag(tag.id, relative_position, robot_odometry_rotation)
+        if tag.tag_id not in tags_on_field:
+            continue
+        relative_position = cal.get_relative_position_to_robot(tags_on_field[tag.tag_id].height, tag.center[0]-camera_resolution[0]/2, tag.center[1]-camera_resolution[1]/2)
+        estimate = get_robot_position_via_navigation_tag(tag.tag_id, relative_position, robot_odometry_rotation)
         estimationSums = estimationSums.add_by(estimate)
     if len(tags) == 0:
-        robot_visual_position = -1
+        robot_visual_position = None
     else:
-        robot_visual_position = estimationSums.multiply_by(1/len(tags))
+        robot_visual_position = estimationSums.multiply_by_scalar(1/len(tags))
+    print("robot visual pos: ", robot_visual_position)
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -79,7 +82,7 @@ def pull_odometry_data_from_networktable():
     pass
 
 def send_results_to_networktable():
-    if robot_visual_position == -1:
+    if robot_visual_position is None:
         robot_pos_x.setDouble(5.0)
         robot_pos_y.setDouble(5.0)
     else:
