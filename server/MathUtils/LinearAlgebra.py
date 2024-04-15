@@ -113,7 +113,7 @@ class Vector2D:
         Returns:
         - bool: True if the vectors are equal, False otherwise.
         """
-        return np.array_equal(self.array, other.array)
+        return other.__class__ == self.__class__ and np.array_equal(self.array, other.array)
 
     def __str__(self) -> str:
         """

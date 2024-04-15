@@ -1,5 +1,5 @@
 from MathUtils.LinearAlgebra import *
-import MathUtils.tagdistancecalculator as cal
+import MathUtils.tagdistancecalculator as cal, logging
 from networktables import NetworkTables
 
 
@@ -67,7 +67,9 @@ def process_results(tags:list, camera_resolution:tuple):
         robot_visual_position = estimationSums.multiply_by(1/len(tags))
 
 
+logging.basicConfig(level=logging.DEBUG)
 NetworkTables.initialize()
+NetworkTables.startServer(listenAddress="0.0.0.0")
 robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
 robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
 robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")

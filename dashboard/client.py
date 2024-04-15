@@ -1,16 +1,16 @@
-import pygame, sys, math
+import pygame, sys, math, logging
 from networktables import NetworkTables
 
 
 robot_width = 0.5  # meters
 robot_length = 0.5  # meters
-# SERVER_URL = "onbot-jetson.local"
+# SERVER = "onbot-jetson.local"
 SERVER = "localhost"
 
 
-
-NetworkTables.initialize()
+logging.basicConfig(level=logging.DEBUG)
 NetworkTables.startClient(SERVER)
+NetworkTables.initialize()
 robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
 robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
 robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
@@ -48,24 +48,25 @@ def field_to_pixel(field_coord, window_width, window_height):
 
     return pixel_x, pixel_y
 
-# Draw the field image
-window.blit(field_image, (0, 0))
+def draw_field_and_tags_as_background():
+    # Draw the field image
+    window.blit(field_image, (0, 0))
 
-# Draw the navigation tags (outside the main loop)
-font = pygame.font.Font(None, 36)
-navigation_tags = [(1, 15.079471999999997, 0.24587199999999998), (2, 16.185134, 0.883666), (3, 16.579342, 4.982717999999999), (4, 16.579342, 5.547867999999999), (5, 14.700757999999999, 8.2042), (6, 1.8415, 8.2042), (7, -0.038099999999999995, 5.547867999999999), (8, -0.038099999999999995, 4.982717999999999), (9, 0.356108, 0.883666), (10, 1.4615159999999998, 0.24587199999999998), (11, 11.904726, 3.7132259999999997), (12, 11.904726, 4.49834), (13, 11.220196, 4.105148), (14, 5.320792, 4.105148), (15, 4.641342, 4.49834), (16, 4.641342, 3.7132259999999997)]
+    # Draw the navigation tags (outside the main loop)
+    font = pygame.font.Font(None, 36)
+    navigation_tags = [(1, 15.079471999999997, 0.24587199999999998), (2, 16.185134, 0.883666), (3, 16.579342, 4.982717999999999), (4, 16.579342, 5.547867999999999), (5, 14.700757999999999, 8.2042), (6, 1.8415, 8.2042), (7, -0.038099999999999995, 5.547867999999999), (8, -0.038099999999999995, 4.982717999999999), (9, 0.356108, 0.883666), (10, 1.4615159999999998, 0.24587199999999998), (11, 11.904726, 3.7132259999999997), (12, 11.904726, 4.49834), (13, 11.220196, 4.105148), (14, 5.320792, 4.105148), (15, 4.641342, 4.49834), (16, 4.641342, 3.7132259999999997)]
 
-for tag_id, field_x, field_y in navigation_tags:
-    pixel_x, pixel_y = field_to_pixel((field_x, field_y), WINDOW_WIDTH, WINDOW_HEIGHT)
-    # Render text
-    text = font.render(str(tag_id).zfill(2), True, (0, 0, 255))
-    # Create a white rectangle to serve as background for text
-    text_rect = text.get_rect(center=(pixel_x, pixel_y))
-    # Limit the border of the labels to be inside the window
-    text_rect.centerx = max(text_rect.width // 2, min(text_rect.centerx, WINDOW_WIDTH - text_rect.width // 2))
-    text_rect.centery = max(text_rect.height // 2, min(text_rect.centery, WINDOW_HEIGHT - text_rect.height // 2))
-    pygame.draw.rect(window, (255, 255, 255), text_rect)  # Draw white background
-    window.blit(text, text_rect.topleft)  # Draw text
+    for tag_id, field_x, field_y in navigation_tags:
+        pixel_x, pixel_y = field_to_pixel((field_x, field_y), WINDOW_WIDTH, WINDOW_HEIGHT)
+        # Render text
+        text = font.render(str(tag_id).zfill(2), True, (0, 0, 255))
+        # Create a white rectangle to serve as background for text
+        text_rect = text.get_rect(center=(pixel_x, pixel_y))
+        # Limit the border of the labels to be inside the window
+        text_rect.centerx = max(text_rect.width // 2, min(text_rect.centerx, WINDOW_WIDTH - text_rect.width // 2))
+        text_rect.centery = max(text_rect.height // 2, min(text_rect.centery, WINDOW_HEIGHT - text_rect.height // 2))
+        pygame.draw.rect(window, (255, 255, 255), text_rect)  # Draw white background
+        window.blit(text, text_rect.topleft)  # Draw text
 
 def get_robot_field_position() -> tuple:
     '''
@@ -129,9 +130,12 @@ try:
                 pygame.quit()
                 sys.exit()
             
+        draw_field_and_tags_as_background()
         NetworkTables.flush()
 
-        draw_robot(get_robot_field_position(), get_robot_rotation(), window)
+        draw_robot(get_robot_field_position(), get_robot_rotation())
+        # if not NetworkTables.isConnected():
+        #     print("<-- trying to connect to server -->")
         # draw_robot((5, 5), 0)
 
         # Update the display
@@ -140,3 +144,10 @@ try:
         clock.tick(fps)
 except KeyboardInterrupt:
     print("user interrupt, exiting...")
+
+'''
+now the problem is, even though I executed the line NetworkTables.startClient(SERVER)
+but the logging of the client still says "DEBUG:nt:Listening on  1735"
+which means, the NetworkTables library misunderstand my operation and started a server on localhost
+how can I solve this bug?
+'''
