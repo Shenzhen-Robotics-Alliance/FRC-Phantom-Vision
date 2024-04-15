@@ -49,13 +49,13 @@ def field_to_pixel(field_coord, window_width, window_height):
 
     return pixel_x, pixel_y
 
+navigation_tags = [(1, 15.079471999999997, 0.24587199999999998), (2, 16.185134, 0.883666), (3, 16.579342, 4.982717999999999), (4, 16.579342, 5.547867999999999), (5, 14.700757999999999, 8.2042), (6, 1.8415, 8.2042), (7, -0.038099999999999995, 5.547867999999999), (8, -0.038099999999999995, 4.982717999999999), (9, 0.356108, 0.883666), (10, 1.4615159999999998, 0.24587199999999998), (11, 11.904726, 3.7132259999999997), (12, 11.904726, 4.49834), (13, 11.220196, 4.105148), (14, 5.320792, 4.105148), (15, 4.641342, 4.49834), (16, 4.641342, 3.7132259999999997)]
 def draw_field_and_tags_as_background():
     # Draw the field image
     window.blit(field_image, (0, 0))
 
     # Draw the navigation tags (outside the main loop)
     font = pygame.font.Font(None, 36)
-    navigation_tags = [(1, 15.079471999999997, 0.24587199999999998), (2, 16.185134, 0.883666), (3, 16.579342, 4.982717999999999), (4, 16.579342, 5.547867999999999), (5, 14.700757999999999, 8.2042), (6, 1.8415, 8.2042), (7, -0.038099999999999995, 5.547867999999999), (8, -0.038099999999999995, 4.982717999999999), (9, 0.356108, 0.883666), (10, 1.4615159999999998, 0.24587199999999998), (11, 11.904726, 3.7132259999999997), (12, 11.904726, 4.49834), (13, 11.220196, 4.105148), (14, 5.320792, 4.105148), (15, 4.641342, 4.49834), (16, 4.641342, 3.7132259999999997)]
 
     for tag_id, field_x, field_y in navigation_tags:
         pixel_x, pixel_y = field_to_pixel((field_x, field_y), WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -86,14 +86,46 @@ def get_tags_visibility() -> list[bool]:
     '''
     returns: a boolean array marking, the visibilities of tags. Starting from tag id 1, True is visible.
     '''
-    tags_visibility_table.getBooleanArray([False for i in range(16)])
+    return tags_visibility_table.getBooleanArray([False for i in range(16)])
 
-def mark_visible_tags():
+def mark_visible_tags(robot_head:tuple):
     '''
-    marks the visible tags
-    a tag that is visible is marked by a straight, dotted line in gray
-    that connects the robot's head (given its coordinate) and the tag's position (in navigation_tags)
+    Marks the visible tags with a straight, dotted line in gray that connects the robot's head (given its coordinate)
+    and the tag's position (in navigation_tags).
+
+    Parameters:
+        window: Pygame display surface where the robot and tags are being drawn.
+        robot_head: Tuple of pixel coordinates (x, y) for the robot's head position.
     '''
+    visible_tags = get_tags_visibility()  # Assuming this function returns a list of boolean values for tag visibility
+
+    # Draw a line for each visible tag
+    for index, (_, field_x, field_y) in enumerate(navigation_tags):
+        if visible_tags[index]:
+            tag_pixel_position = field_to_pixel((field_x, field_y), WINDOW_WIDTH, WINDOW_HEIGHT)
+            # Draw a dotted line from robot_head to tag_pixel_position
+            draw_dotted_line(window, robot_head, tag_pixel_position, (255, 255, 0), 1)
+
+def draw_dotted_line(surface, start_pos, end_pos, color, width=3):
+    '''
+    Draws a dotted line between two points.
+
+    Parameters:
+        surface: The pygame surface on which to draw.
+        start_pos: Starting position tuple (x, y).
+        end_pos: Ending position tuple (x, y).
+        color: Color of the line.
+        width: Width of the line.
+    '''
+    x1, y1 = start_pos
+    x2, y2 = end_pos
+    distance = math.hypot(x2 - x1, y2 - y1)
+    dots = int(distance / width * 2)  # Number of dots, 10 pixels apart
+    for n in range(dots):
+        x = x1 + n * (x2 - x1) / dots
+        y = y1 + n * (y2 - y1) / dots
+        pygame.draw.circle(surface, color, (int(x), int(y)), width)
+
 
 # Function to draw the robot on the dashboard
 ROBOT_DISPLAY_LENGTH_METERS = 0.7
@@ -151,9 +183,7 @@ try:
         draw_field_and_tags_as_background()
         NetworkTables.flush()
 
-        draw_robot(get_robot_field_position(), get_robot_rotation())
-
-        print("tags visibility: ", tags_visibility_table.getBooleanArray([False for i in range(16)]))
+        mark_visible_tags(draw_robot(get_robot_field_position(), get_robot_rotation()))
         # if not NetworkTables.isConnected():
         #     print("<-- trying to connect to server -->")
         # draw_robot((5, 5), 0)
