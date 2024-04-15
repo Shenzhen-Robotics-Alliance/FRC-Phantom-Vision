@@ -14,6 +14,7 @@ NetworkTables.initialize()
 robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
 robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
 robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
+tags_visibility_table = NetworkTables.getTable("Vision").getEntry("tags_visibility")
 
 # Initialize Pygame
 pygame.init()
@@ -81,10 +82,26 @@ def get_robot_rotation() -> float:
     '''
     return robot_rot.getDouble(0)
 
+def get_tags_visibility() -> list[bool]:
+    '''
+    returns: a boolean array marking, the visibilities of tags. Starting from tag id 1, True is visible.
+    '''
+    tags_visibility_table.getBooleanArray([False for i in range(16)])
+
+def mark_visible_tags():
+    '''
+    marks the visible tags
+    a tag that is visible is marked by a straight, dotted line in gray
+    that connects the robot's head (given its coordinate) and the tag's position (in navigation_tags)
+    '''
+
 # Function to draw the robot on the dashboard
 ROBOT_DISPLAY_LENGTH_METERS = 0.7
 ROBOT_DISPLAY_WIDTH_METERS = 0.6
-def draw_robot(robot_pos, robot_rotation):
+def draw_robot(robot_pos, robot_rotation) -> tuple:
+    '''
+    returns: the position of the dot, that represents the robot's head
+    '''
      # Calculate the robot's pixel position
     pixel_pos = field_to_pixel(robot_pos, WINDOW_WIDTH, WINDOW_HEIGHT)
 
@@ -119,6 +136,7 @@ def draw_robot(robot_pos, robot_rotation):
     # Draw head dot
     pygame.draw.circle(window, (0, 255, 0), (int(front_mid[0]), int(front_mid[1])), 5)  # 5 pixels radius for the dot
 
+    return (int(front_mid[0]), int(front_mid[1]))
 
 fps = 60
 clock = pygame.time.Clock()
@@ -134,6 +152,8 @@ try:
         NetworkTables.flush()
 
         draw_robot(get_robot_field_position(), get_robot_rotation())
+
+        print("tags visibility: ", tags_visibility_table.getBooleanArray([False for i in range(16)]))
         # if not NetworkTables.isConnected():
         #     print("<-- trying to connect to server -->")
         # draw_robot((5, 5), 0)

@@ -47,6 +47,7 @@ robot_odometry_position = Vector2D((7.2,4.8))
 robot_odometry_rotation = Rotation2D(0)
 robot_visual_position = -1
 robot_odometry_position_last_navigation = Vector2D()
+visible_tags = []
 
 def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot:Vector2D, robot_facing:Rotation2D):
     tag_field_position = tags_on_field[id].position_on_field
@@ -55,11 +56,13 @@ def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
 def process_results(tags:list, camera_resolution:tuple):
-    global robot_visual_position
+    global robot_visual_position, visible_tags
     estimationSums = Vector2D()
+    visible_tags = []
     for tag in tags:
         if tag.tag_id not in tags_on_field:
             continue
+        visible_tags.append(tag.tag_id)
         relative_position = cal.get_relative_position_to_robot(tags_on_field[tag.tag_id].height, tag.center[0]-camera_resolution[0]/2, tag.center[1]-camera_resolution[1]/2)
         estimate = get_robot_position_via_navigation_tag(tag.tag_id, relative_position, robot_odometry_rotation)
         estimationSums = estimationSums.add_by(estimate)
@@ -76,15 +79,21 @@ NetworkTables.startServer(listenAddress="0.0.0.0")
 robot_pos_x = NetworkTables.getTable("Vision").getEntry("robot_pos_x")
 robot_pos_y = NetworkTables.getTable("Vision").getEntry("robot_pos_y")
 robot_rot = NetworkTables.getTable("Vision").getEntry("robot_rot")
+tags_visibility_table = NetworkTables.getTable("Vision").getEntry("tags_visibility")
 
 def pull_odometry_data_from_networktable():
     # TODO get the odomotry data from networktable
     pass
 
 def send_results_to_networktable():
+    tags_visibility = [False for i in range(16)]
+    for i in visible_tags:
+        tags_visibility[i-1] = True
+    tags_visibility_table.setBooleanArray(tags_visibility)
+
     if robot_visual_position is None:
-        robot_pos_x.setDouble(5.0)
-        robot_pos_y.setDouble(5.0)
+        robot_pos_x.setDouble(robot_odometry_position.get_x())
+        robot_pos_y.setDouble(robot_odometry_position.get_y())
     else:
         robot_pos_x.setDouble(robot_visual_position.get_x())
         robot_pos_y.setDouble(robot_visual_position.get_y())
