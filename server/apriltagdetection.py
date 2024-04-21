@@ -1,8 +1,8 @@
-CAM_PORT = 1
-CAMERA_RESOLUTION = (640, 480)
+CAM_PORT = 0
+CAMERA_RESOLUTION = (320, 240)
 CAMERA_FRAMERATE = 120
 # STREAMING_RESOLUTION = (160, 120)
-STREAMING_RESOLUTION = (640, 480)
+STREAMING_RESOLUTION = (320, 240)
 FLIP_IMAGE = -1 # 0 for vertical flip, 1 for horizontal flip, -1 for flip both, None for do not flip
 
 # crosshair setting
@@ -40,11 +40,11 @@ def detect_once():
     dt = time()
     frame = camera.get_image()
     gray = camera.get_image_gray()
-    # print("<-- pull image from camera time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
+    print("<-- pull image from camera time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
 
     dt = time()
     tags = detector.detect(gray)
-    # print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
+    print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
     
     dt = time()
     # mark apriltags and add detection results
@@ -87,7 +87,7 @@ def detect_once():
     cv2.line(frame_resized, (frame_center[0], frame_center[1] - CROSSHAIR_LENGTH), (frame_center[0], frame_center[1] + CROSSHAIR_LENGTH), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
 
     
-    # print("process result time: " + str(int((time() - dt)*1000)) + "ms -->")
+    print("process result time: " + str(int((time() - dt)*1000)) + "ms -->")
 
 def generate_forever():
     camera.start_capture()
@@ -102,9 +102,11 @@ def generate_forever():
 
         lock.release()
 
-        sleep(max(0, 1/CAMERA_FRAMERATE-0.001-(time()-t)))
+        sleep(max(0, 1/CAMERA_FRAMERATE-(time()-t)))
+        # camera.wait_until_new_frame_ready()
         frame_time_total += time() - t
         frame_time_samplecount += 1
+        print((time()-t)*1000)
         t = time()
     camera.stop_capture()
 

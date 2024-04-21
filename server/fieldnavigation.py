@@ -70,7 +70,7 @@ def process_results(tags:list, camera_resolution:tuple):
         robot_visual_position = None
     else:
         robot_visual_position = estimationSums.multiply_by_scalar(1/len(tags))
-    print("robot visual pos: ", robot_visual_position)
+    # print("robot visual pos: ", robot_visual_position)
 
 
 logging.basicConfig(level=logging.DEBUG)

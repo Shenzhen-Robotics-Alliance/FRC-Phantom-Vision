@@ -8,6 +8,7 @@ while True:
         fieldnavigation.pull_odometry_data_from_networktable()
         fieldnavigation.process_results(apriltagdetection.tags, apriltagdetection.CAMERA_RESOLUTION)
         fieldnavigation.send_results_to_networktable()
+        sleep(0.02)
     except KeyboardInterrupt:
         print("<-- user interrupt, shutting down... -->")
         
