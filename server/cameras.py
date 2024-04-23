@@ -30,7 +30,6 @@ class USBCamera:
         frames_count = 0
         try:
             while not self.stopped:
-                dt = time()
                 ret, new_frame = self.cap.read()
                 self.lock.acquire()
                 if not ret:
@@ -51,7 +50,7 @@ class USBCamera:
                     frames_count = 0
                     fps_last_calculated = time()
                 frames_count += 1
-                cv2.putText(self.image, f"CAP FPS: {fps}", (30,30), cv2.FONT_HERSHEY_COMPLEX, 1.5, (0, 255, 0), 1)
+                cv2.putText(self.image, f"CAP FPS: {fps}", (30,30), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 1)
                 self.lock.release()
         except KeyboardInterrupt:
             return
@@ -65,8 +64,8 @@ class USBCamera:
         self.cap.release()
 
     def get_image(self):
-        self.lock.acquire()
-        self.lock.release()
+        # self.lock.acquire()
+        # self.lock.release()
         return self.image
 
     def get_image_gray(self):

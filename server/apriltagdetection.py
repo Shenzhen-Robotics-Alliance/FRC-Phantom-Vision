@@ -1,4 +1,4 @@
-CAM_PORT = 0
+CAM_PORT = 1
 CAMERA_RESOLUTION = (320, 240)
 CAMERA_FRAMERATE = 120
 # STREAMING_RESOLUTION = (160, 120)
@@ -10,8 +10,7 @@ CROSSHAIR_LENGTH = 30
 CROSSHAIR_COLOR = (0, 255, 0)
 CROSSHAIR_THICKNESS = 2
 
-import cv2, threading, sys, cameras, MathUtils.tagdistancecalculator as tagdistancecalculator, fieldnavigation
-import numpy as np
+import cv2, threading, sys, cameras
 from time import time, sleep
 # import apriltag
 import pupil_apriltags as apriltag # for windows
@@ -103,7 +102,7 @@ def generate_forever():
         lock.release()
 
         sleep(max(0, 1/CAMERA_FRAMERATE-(time()-t)))
-        # camera.wait_until_new_frame_ready()
+        # sleep(max(0, 0.005-(time()-t)))
         frame_time_total += time() - t
         frame_time_samplecount += 1
         print((time()-t)*1000)
