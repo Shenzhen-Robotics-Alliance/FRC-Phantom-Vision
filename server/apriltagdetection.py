@@ -86,7 +86,7 @@ class AprilTagCamera:
         cv2.line(self.frame_resized, (self.frame_center[0], self.frame_center[1] - CROSSHAIR_LENGTH), (self.frame_center[0], self.frame_center[1] + CROSSHAIR_LENGTH), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
 
         
-        print("process result time: " + str(int((time() - dt)*1000)) + "ms -->")
+        print(f"process result time: {int((time() - dt)*1000)}ms total delay: {(time()-self.camera.previous_frame_time) * 1000}ms-->")
 
     def generate_forever(self):
         self.camera.start_capture()

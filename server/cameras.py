@@ -23,6 +23,7 @@ class USBCamera:
         self.cap_thread = threading.Thread(target=self.capture_forever)
         self.stopped = False
         self.lock = threading.Lock()
+        self.previous_frame_time = time()
     
     def capture_forever(self):
         fps = 0
@@ -51,6 +52,7 @@ class USBCamera:
                     fps_last_calculated = time()
                 frames_count += 1
                 cv2.putText(self.image, f"CAP FPS: {fps}", (30,30), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 1)
+                self.previous_frame_time = time()
                 self.lock.release()
         except KeyboardInterrupt:
             return
