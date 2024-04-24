@@ -35,7 +35,7 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
 
-            fps = apriltagdetection.get_fps()
+            fps = apriltagdetection.camera0.get_fps()
             if fps == -1:
                 self.wfile.write("waiting for camera to start".encode())
             else:
@@ -45,12 +45,13 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
             self.end_headers()
-            while apriltagdetection.running:
+            while apriltagdetection.camera0.running:
                 try:
-                    frame = apriltagdetection.get_frame()
+                    frame = apriltagdetection.camera0.get_frame()
                     ret, buffer = cv2.imencode('.jpg', frame)
                     frame_bytes = buffer.tobytes()
                     self.send_frame(frame_bytes)
+                    # sleep(0.02)
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
@@ -58,9 +59,9 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
-            while apriltagdetection.running:
+            while apriltagdetection.camera0.running:
                 try:
-                    self.wfile.write(apriltagdetection.get_results().encode())
+                    self.wfile.write(apriltagdetection.camera0.get_results().encode())
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
