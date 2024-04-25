@@ -1,6 +1,9 @@
-from MathUtils.LinearAlgebra import *
-import MathUtils.tagdistancecalculatorlegacy as cal, logging
+import logging
 from networktables import NetworkTables
+
+from MathUtils.LinearAlgebra import *
+from MathUtils.cameraprofiles import CameraProfile
+from apriltagdetection import AprilTagCamera
 
 
 class TagOnField:
@@ -55,17 +58,22 @@ def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot
     robot_relative_position_to_tag_field_oriented = tag_relative_position_to_robot_field_oriented.multiply_by_scalar(-1)
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
-def process_results(tags:list, camera_resolution:tuple):
+def process_results(camera_resolution:tuple, cameras:list[AprilTagCamera], camera_profiles:list[CameraProfile]):
     global robot_visual_position, visible_tags
+    # TODO: if different estimates deviates too much from one another, we think the results are not trustable
     estimationSums = Vector2D()
     visible_tags = []
-    for tag in tags:
-        if tag.tag_id not in tags_on_field:
-            continue
-        visible_tags.append(tag.tag_id)
-        relative_position = cal.get_relative_position_to_robot(tags_on_field[tag.tag_id].height, tag.center[0]-camera_resolution[0]/2, tag.center[1]-camera_resolution[1]/2)
-        estimate = get_robot_position_via_navigation_tag(tag.tag_id, relative_position, robot_odometry_rotation)
-        estimationSums = estimationSums.add_by(estimate)
+    for camera_id in range(len(cameras)):
+        camera = cameras[camera_id]
+        camera_profile = camera_profiles[camera_id]
+        tags = camera.tags
+        for tag in tags:
+            if tag.tag_id not in tags_on_field:
+                continue
+            visible_tags.append(tag.tag_id)
+            relative_position = camera_profile.get_relative_position_to_robot(tags_on_field[tag.tag_id].height, tag.center[0]-camera_resolution[0]/2, tag.center[1]-camera_resolution[1]/2)
+            estimate = get_robot_position_via_navigation_tag(tag.tag_id, relative_position, robot_odometry_rotation)
+            estimationSums = estimationSums.add_by(estimate)
     if len(tags) == 0:
         robot_visual_position = None
     else:

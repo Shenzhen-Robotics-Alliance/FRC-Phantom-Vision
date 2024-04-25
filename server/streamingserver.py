@@ -35,19 +35,26 @@ class StreamingHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
 
-            fps = apriltagdetection.camera0.get_fps()
-            if fps == -1:
-                self.wfile.write("waiting for camera to start".encode())
-            else:
-                print("Returning FPS to webpage: ", fps)
-                self.wfile.write( ("Detector FPS: " + str(fps))  .encode())
+            message = "Apriltag Detections FPS: "
+            for i in range(len(apriltagdetection.apriltag_cameras)):
+                message += f'cam{i} {apriltagdetection.apriltag_cameras[i].get_fps()}, '
+            print("Returning FPS to webpage: ", message)
+            self.wfile.write( str(message).encode())
         elif parsed_path.path == '/video_feed':
+            cam_id = 0
+            if 'camera_id' in parsed_path.params:
+                cam_id = parsed_path.params['camera_id']
+
+            if cam_id < 0 or cam_id >= len(apriltagdetection.apriltag_cameras):
+                self.send_404()
+                return
+            
             self.send_response(200)
             self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
             self.end_headers()
-            while apriltagdetection.camera0.running:
+            while apriltagdetection.apriltag_cameras[cam_id].running:
                 try:
-                    frame = apriltagdetection.camera0.get_frame()
+                    frame = apriltagdetection.apriltag_cameras[cam_id].get_frame()
                     ret, buffer = cv2.imencode('.jpg', frame)
                     frame_bytes = buffer.tobytes()
                     self.send_frame(frame_bytes)
@@ -56,22 +63,32 @@ class StreamingHandler(SimpleHTTPRequestHandler):
                     print("client disconnected")
                     return
         elif parsed_path.path == '/tag_boxes':
+            cam_id = 0
+            if 'camera_id' in parsed_path.params:
+                cam_id = parsed_path.params['camera_id']
+
+            if cam_id < 0 or cam_id >= len(apriltagdetection.apriltag_cameras):
+                self.send_404()
+                return
+            
             self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
+            self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
             self.end_headers()
-            while apriltagdetection.camera0.running:
+            while apriltagdetection.apriltag_cameras[cam_id].running:
                 try:
-                    self.wfile.write(apriltagdetection.camera0.get_results().encode())
+                    self.wfile.write(apriltagdetection.apriltag_cameras[cam_id].get_results().encode())
                 except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
                     print("client disconnected")
                     return
         else:
-            # Respond with a 404 Not Found status and custom message
+            self.send_404()
+
+    def send_404(self):
+        # Respond with a 404 Not Found status and custom message
             self.send_response(404)  # Send 404 Not Found status
             self.send_header('Content-Type', 'text/html')  # Specify the content type as HTML
             self.end_headers()
             self.wfile.write(b"<html><head><title>Not Found</title></head><body><h1>Page not found</h1></body></html>")
-
     def send_frame(self, frame):
         boundary = b'frame'
         headers = (

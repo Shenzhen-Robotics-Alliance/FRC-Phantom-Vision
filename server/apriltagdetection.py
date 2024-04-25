@@ -9,10 +9,12 @@ CROSSHAIR_LENGTH = 30
 CROSSHAIR_COLOR = (0, 255, 0)
 CROSSHAIR_THICKNESS = 2
 
-import cv2, threading, sys, cameras
+import cv2, threading, sys, cameras, math
 from time import time, sleep
 # import apriltag
 import pupil_apriltags as apriltag # for windows
+from MathUtils.cameraprofiles import CameraProfile
+from MathUtils.LinearAlgebra import *
 
 class AprilTagCamera:
     def __init__(self, portID):
@@ -33,17 +35,18 @@ class AprilTagCamera:
         self.frame_time_samplecount = 0
         self.lock = threading.Lock()
         self.detection_thread = threading.Thread(target=self.generate_forever)
+        self.portID = portID
 
     def detect_once(self):
         # print("<-- capturing -->")
         dt = time()
         frame = self.camera.get_image()
         gray = self.camera.get_image_gray()
-        print("<-- pull image from camera time: " + str(int((time() - dt)*1000)) + "ms", end="; ")
+        print(f"<-- camera {self.portID} pull image from camera time: {int((time() - dt)*1000)} ms", end="; ")
 
         dt = time()
         self.tags = self.detector.detect(gray)
-        print("detector time: " + str(int((time() - dt)*1000)) + "ms", end=", ")
+        print(f"detector time: {int((time() - dt)*1000)} ms", end=", ")
         
         dt = time()
         # mark apriltags and add detection results
@@ -135,5 +138,12 @@ class AprilTagCamera:
         self.frame_time_samplecount = 0
         return fps
 
-camera0 = AprilTagCamera(0)
+apriltag_cameras = [
+    AprilTagCamera(0), 
+    AprilTagCamera(1)
+]
+camera_profiles = [
+    CameraProfile(0.0019083090502545134, -0.0018938381148259048, math.radians(30), 0.05, Vector2D([0, 0.35]), Rotation2D(0)), 
+    CameraProfile(0.0019083090502545134, -0.0018938381148259048, math.radians(30), 0.05, Vector2D([0, 0.35]), Rotation2D(math.pi))
+]
 print("<-- apriltag camera and detector ready -->")

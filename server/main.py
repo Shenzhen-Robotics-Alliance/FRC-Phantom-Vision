@@ -1,12 +1,14 @@
 from time import sleep
 import apriltagdetection, streamingserver, fieldnavigation
 
-apriltagdetection.camera0.start_detections()
+for apriltag_camera in apriltagdetection.apriltag_cameras:
+    apriltag_camera.start_detections()
 streamingserver.start_streaming_server()
 while True:
     try:
         fieldnavigation.pull_odometry_data_from_networktable()
-        fieldnavigation.process_results(apriltagdetection.camera0.tags, apriltagdetection.CAMERA_RESOLUTION)
+        fieldnavigation.process_results(apriltagdetection.CAMERA_RESOLUTION, apriltagdetection.apriltag_cameras, apriltagdetection.camera_profiles)
+        
         fieldnavigation.send_results_to_networktable()
         sleep(0.02)
     except KeyboardInterrupt:
@@ -20,6 +22,7 @@ while True:
 
         break
     
-apriltagdetection.camera0.stop_detection()
+for apriltag_camera in apriltagdetection.apriltag_cameras:
+    apriltag_camera.stop_detection()
 streamingserver.stop_streaming_server()
 print("<-- program exits... -->")
