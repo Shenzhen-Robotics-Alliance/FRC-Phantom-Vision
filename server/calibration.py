@@ -1,6 +1,8 @@
+import math
+
 first_col_height = 4-2
 spacing = 3.5
-camera_distances_to_paper = [10, 20, 30, 40]
+camera_pitch = math.radians(30)
 
 top_left = (-spacing * 3.5, first_col_height + spacing * 4)
 
@@ -19,7 +21,7 @@ i = 0
 horizontal_ratios_samples, vertical_ratios_samples, pixel_x_samples, pixel_y_samples = [], [], [], []
 try:
     while True:
-        print("<-- please put the paper", camera_distances_to_paper[i] , "cm away from camera -->")
+        print("<-- please aim the camera at row", i , " (counting from button to top) -->")
         frame = apriltagdetection.get_frame()
         cv2.imshow('Camera Calibration', frame)
 
@@ -28,12 +30,17 @@ try:
             print("<-- esc pressed, exiting... -->")
             break
         elif key == ord('s'):
+            camera_distance_to_paper = (first_col_height + i * spacing) / math.sin(camera_pitch)
             tags = apriltagdetection.get_tags()
             print("<-- results detected: ", end="")
             for tag in tags:
                 print(f"id {tag.tag_id} center {tag.center}", end="; ")
-                horizontal_ratios_samples.append(tag_pos[tag.tag_id][0] / camera_distances_to_paper[i])
-                vertical_ratios_samples.append(tag_pos[tag.tag_id][1] / camera_distances_to_paper[i])
+
+                projection_surface_distance = math.cos(camera_pitch) * (camera_distance_to_paper + tag_pos[tag.tag_id][1] * math.tan(camera_pitch))
+                tag_pitch = math.atan(tag_pos[tag.tag_id][1] / camera_distance_to_paper)
+                vertical_ratios_samples.append(math.tan(tag_pitch-camera_pitch))
+                horizontal_ratios_samples.append(tag_pos[tag.tag_id][0] / projection_surface_distance)
+                
                 pixel_x_samples.append(tag.center[0] - apriltagdetection.CAMERA_RESOLUTION[0]/2)
                 pixel_y_samples.append(tag.center[1] - apriltagdetection.CAMERA_RESOLUTION[1]/2)
                 
@@ -43,7 +50,7 @@ try:
             cv2.waitKey(1000)
 
             i += 1
-            if i == len(camera_distances_to_paper):
+            if i == 4:
                 break
 except KeyboardInterrupt:
     print("<-- interrupted by user -->")

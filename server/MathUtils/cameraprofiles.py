@@ -20,6 +20,7 @@ class CameraProfile:
         target_h = targert_height - self.camera_installation_height
         target_y = target_h / tan(target_theta)
 
+        # TODO: improve this algorithm
         target_x = target_y * pixel_x * self.horizontal_projection_ratio
         print("px:", pixel_x)
 
