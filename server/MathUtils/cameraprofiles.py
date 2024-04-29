@@ -20,8 +20,7 @@ class CameraProfile:
         target_h = targert_height - self.camera_installation_height
         target_y = target_h / tan(target_theta)
 
-        # TODO: improve this algorithm
-        target_x = target_y * pixel_x * self.horizontal_projection_ratio
-        print("px:", pixel_x)
-
+        projection_surface_distance = math.cos(self.camera_installation_angle) * (math.tan(self.camera_installation_angle) * target_h + target_y)
+        target_x = projection_surface_distance * pixel_x * self.horizontal_projection_ratio
+        
         return Vector2D([target_x, target_y]).add_by(self.camera_position_on_robot).multiply_by(self.camera_facing)
