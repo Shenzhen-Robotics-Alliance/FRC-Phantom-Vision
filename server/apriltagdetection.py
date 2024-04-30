@@ -139,11 +139,11 @@ class AprilTagCamera:
         return fps
 
 apriltag_cameras = [
-    AprilTagCamera(0), 
-    AprilTagCamera(1)
+    AprilTagCamera(1), 
+    # AprilTagCamera(0)
 ]
 camera_profiles = [
-    CameraProfile(0.0019083090502545134, -0.0018938381148259048, math.radians(30), 0.05, Vector2D([0, 0.35]), Rotation2D(0)), 
-    CameraProfile(0.0019083090502545134, -0.0018938381148259048, math.radians(30), 0.05, Vector2D([0, 0.35]), Rotation2D(math.pi))
+    CameraProfile(0.0015774, -0.001638, math.radians(30), 0.4, Vector2D([0, 0.35]), Rotation2D(0)), 
+    # CameraProfile(0.0019083090502545134, -0.0018938381148259048, math.radians(30), 0.4, Vector2D([0, 0.35]), Rotation2D(math.pi))
 ]
 print("<-- apriltag camera and detector ready -->")

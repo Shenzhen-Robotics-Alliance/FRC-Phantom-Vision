@@ -15,14 +15,14 @@ for row in range(8):
 import apriltagdetection, cv2
 
 apriltagdetection.STREAMING_RESOLUTION = (1024, 768)
-apriltagdetection.start_detections()
+apriltagdetection.apriltag_cameras[0].start_detections()
 
 i = 0
 horizontal_ratios_samples, vertical_ratios_samples, pixel_x_samples, pixel_y_samples = [], [], [], []
 try:
     while True:
         print("<-- please aim the camera at row", i , " (counting from button to top) -->")
-        frame = apriltagdetection.get_frame()
+        frame = apriltagdetection.apriltag_cameras[0].get_frame()
         cv2.imshow('Camera Calibration', frame)
 
         key = cv2.waitKey(5) & 0xFF
@@ -31,7 +31,7 @@ try:
             break
         elif key == ord('s'):
             camera_distance_to_paper = (first_col_height + i * spacing) / math.sin(camera_pitch)
-            tags = apriltagdetection.get_tags()
+            tags = apriltagdetection.apriltag_cameras[0].get_tags()
             print("<-- results detected: ", end="")
             for tag in tags:
                 print(f"id {tag.tag_id} center {tag.center}", end="; ")
@@ -57,7 +57,7 @@ except KeyboardInterrupt:
     pass
 
 cv2.destroyAllWindows()
-apriltagdetection.stop_detection()
+apriltagdetection.apriltag_cameras[0].stop_detection()
 
 
 # use least-square regression line to find camera param
