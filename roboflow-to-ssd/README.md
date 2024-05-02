@@ -56,17 +56,102 @@ git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
 ```
 ![alt text](<docs/wsl directory.png>)
 
-### Organizing dataset
+### Step 4: organizing dataset
+
+- Put the zip file downloaded from roboflow (in our case, FRC2024-voc.zip to your WSL or jetson nano home directory)
+
+- Move it to jetson inference workspace
+
+```
+unzip FRC2024-voc.zip
+
+cd jetson-inference/python/training/detection/ssd/
+
+mkdir data/FRC2024/Annotations/ data/FRC2024/JPEGImages/
+
+mv ~/FRC2024-voc/train/*.jpg ./data/FRC2024/JPEGImages
+
+mv ~/FRC2024-voc/train/*.xml ./data/FRC2024/Annotations
+```
+
+- now we should use [generate_vocdata.py](https://github.com/dusty-nv/pytorch-ssd/blob/6accaa88845ec135a7d6fe25e9a26afd4698639d/vision/datasets/generate_vocdata.py) from jetson-inference to label the dataset, however it has problems importing data from roboflow, so we use the edited version.
+
+```
+# on another terminal
+git clone https://github.com/Shenzhen-Robotics-Alliance/FRC-Phantom-Vision.git
+
+cp FRC-Phantom-Vision/roboflow-to-ssd/src/generate_vocdata.py jetson-inference/python/train/detection/ssd/vision/datasets/
+```
+
+- now under jetson-inference/python/train/detection/ssd/data/[your dataset name]/, create classes.txt in data dir
 
 ```
 cd jetson-inference/python/training/detection/ssd/
+vim data/FRC2024/classes.txt
+```
 
-mkdir Annotations JPEGImages
+- enter class names
 
-mv [path to dataset]/train/*.jpg ./JPEGImages
+```
+robot, note
+```
 
-mv [path to dataset]/train/*.xml ./Annotations
+- under the same direcotry, create lables.txt
 
+```
+vim data/FRC2024/labels.txt
+```
+- enter the class names
+```
+robot
+note
+```
 
+- ALERT! do not add an emmpty line in the end of the file, that will cause trouble!!!
 
+- now we are ready to label the dataset:
+
+```
+cd jetson-inference/python/training/detection/ssd/
+python3 vision/datasets/generate_vocdata.py ./data/FRC2024/
+```
+
+- result should look like this:
+
+### Step 5: train
+
+```
+cd jetson-inference/python/training/detection/ssd/
+wget https://nvidia.box.com/shared/static/djf5w54rjvpqocsiztzaandq1m3avr7c.pth -O models/mobilenet-v1-ssd-mp-0_675.pth
+pip3 install -v -r requirements.txt
+python3 train_ssd.py --dataset-type=voc --model-dir=models/FRC2024/ --data=./data/FRC2024/ --pretrained-ssd='models/mobilenet-v1-ssd-mp-0_675.pth' --use-cuda --batch-size=8 --workers=8 --epochs=30
+```
+![alt text](<docs/train result.png>)
+
+### Step 5: export
+
+- notice that, since we were running pytorch2 on WSL, you must move the pytorch model to jetson nano to export it to onnx, otherwise, there will be issues.
+
+```
+cd jetson-inference/python/training/detection/ssd/
+zip -r ./FRC2024-pytorch-model.zip ./models/FRC2024/
+```
+
+- copy FRC2024-pytorch-model.zip to jetson nano
+
+- on jetson nano
+
+```
+unzip FRC2024-pytorch-model.zip
+mv FRC2024/ jetson-inference/python/training/detection/ssd/models/
+cd jetson-inference/python/training/detection/ssd/
+python3 onnx_export.py --model-dir=models/FRC2024/
+ls models/FRC2024/ | grep .onnx
+```
+
+- you should see mobilenet.onnx, rename it to your name
+
+```
+mv models/FRC2024/mobilenet.onnx ~/FRC-PHANTOM-VISION/server/models/FRC-2024.onnx
+mv models/FRC2024/labels.txt ~/FRC-PHANTOM-VISION/server/models/
 ```
