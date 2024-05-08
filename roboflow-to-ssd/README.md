@@ -23,7 +23,7 @@ To Collect your own dataset On RobotFlow, please follow [This Guide](https://doc
 
 ### Step 3: Prepare Jetson Inference On Jetson
 Follow [This Guide](https://github.com/dusty-nv/jetson-inference/blob/master/docs/jetpack-setup-2.md) or open ~/jetson-inference on an [Phantom Jetson]()
-### (Optinal) Prepare WSL For Better GPU Performance During Training
+### Step 3 (Optinal): Prepare WSL For Better GPU Performance During Training
 - Prepare a Computer with NVIDIA Graphics Card (recommend rtx2060 or newer) and Windows11 System.
 - To Install Windows Subsystem For Linux, follow [This Guide](https://learn.microsoft.com/en-us/windows/wsl/install).
 - Install [Ubuntu from Microsoft Store](https://apps.microsoft.com/detail/9pn20msr04dw?hl=en-us&gl=US).
@@ -56,7 +56,7 @@ git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
 ```
 ![alt text](<docs/wsl directory.png>)
 
-### Step 4: organizing dataset
+### Step 4: Organize dataset
 
 - Put the zip file downloaded from roboflow (in our case, FRC2024-voc.zip to your WSL or jetson nano home directory)
 
@@ -118,7 +118,7 @@ python3 vision/datasets/generate_vocdata.py ./data/FRC2024/
 
 - result should look like this:
 
-### Step 5: train
+### Step 5: Train Model
 
 ```
 cd jetson-inference/python/training/detection/ssd/
@@ -128,7 +128,7 @@ python3 train_ssd.py --dataset-type=voc --model-dir=models/FRC2024/ --data=./dat
 ```
 ![alt text](<docs/train result.png>)
 
-### Step 5: export
+### Step 5: Export To Onnx
 
 - notice that, since we were running pytorch2 on WSL, you must move the pytorch model to jetson nano to export it to onnx, otherwise, there will be issues.
 
