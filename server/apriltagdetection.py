@@ -89,12 +89,7 @@ class AprilTagCamera:
         t = time()
         print("generate frames activated")
         while self.running:
-            # print("<-- acquiring lock -->")
-            self.lock.acquire()
-            
             self.detect_once()
-
-            self.lock.release()
 
             sleep(max(0, 1/DETECTION_RATE-(time()-t)))
             # sleep(max(0, 0.005-(time()-t)))

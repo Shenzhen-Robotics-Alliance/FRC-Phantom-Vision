@@ -34,6 +34,7 @@ class USBCamera:
         frames_count = 0
         try:
             while not self.stopped:
+                dt = time()
                 ret, new_frame = self.cap.read()
                 if not ret:
                     print("<-- no result from camera yet -->")
