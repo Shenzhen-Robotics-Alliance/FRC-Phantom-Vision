@@ -27,7 +27,6 @@ class AprilTagCamera:
 
         self.running = True
         self.frame = cameras.no_result
-        self.frame_resized = cameras.no_result
         self.tags = []
         self.detection_results = "<no results yet>"
         self.frame_time_total = 0
@@ -39,7 +38,7 @@ class AprilTagCamera:
     def detect_once(self):
         # print("<-- capturing -->")
         dt = time()
-        frame = self.camera.get_image()
+        new_frame = self.camera.get_image()
         gray = self.camera.get_image_gray()
         print(f"<-- camera {self.portID} pull image from camera time: {int((time() - dt)*1000)} ms", end="; ")
 
@@ -61,10 +60,10 @@ class AprilTagCamera:
                 top = min(corner_pos[1], top)
                 right = max(corner_pos[0], right)
                 bottom = max(corner_pos[1], bottom)
-                cv2.circle(frame, corners_pos[-1], 4, (255,0,0), 2)
+                cv2.circle(new_frame, corners_pos[-1], 4, (255,0,0), 2)
                 
             for side in range(4):
-                cv2.line(frame, corners_pos[side-1], corners_pos[side], (0, 255, 0), 3)
+                cv2.line(new_frame, corners_pos[side-1], corners_pos[side], (0, 255, 0), 3)
             center = tag.center
 
             # print("tag center: ", tag.center)
@@ -72,22 +71,17 @@ class AprilTagCamera:
             # print(f"<-- tag {tag.tag_id} have realtive position {tagdistancecalculator.get_relative_position_to_robot(40, tag.center[0]-CAMERA_RESOLUTION[0]/2, tag.center[1]-CAMERA_RESOLUTION[1]/2)}")
 
             area = (right - left) * (bottom - top)
-            cv2.putText(frame, f"{tag.tag_id}", (int(center[0]-40), int(center[1])), cv2.FONT_HERSHEY_COMPLEX, 2.0, (100,200,200), 5)
+            cv2.putText(new_frame, f"{tag.tag_id}", (int(center[0]-40), int(center[1])), cv2.FONT_HERSHEY_COMPLEX, 2.0, (100,200,200), 5)
             # detection_results += f"\n{tag.tag_id} {center[0]} {center[1]} {corners_pos[0][0]} {corners_pos[0][1]} {corners_pos[1][0]} {corners_pos[1][1]} {corners_pos[2][0]} {corners_pos[2][1]} {corners_pos[3][0]} {corners_pos[3][1]}"
             self.detection_results += f"{tag.tag_id} {center[0]} {center[1]} {area}/"
 
         if self.detection_results=="":
             self.detection_results = "no-rst"
-
-    
-        # resize to straming resolution
-        self.frame_resized = cv2.resize(frame, STREAMING_RESOLUTION)
-        # draw crosshair
-        self.frame_center = (STREAMING_RESOLUTION[0] // 2, STREAMING_RESOLUTION[1]//2)
-        cv2.line(self.frame_resized, (self.frame_center[0] - CROSSHAIR_LENGTH, self.frame_center[1]), (self.frame_center[0] + CROSSHAIR_LENGTH, self.frame_center[1]), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
-        cv2.line(self.frame_resized, (self.frame_center[0], self.frame_center[1] - CROSSHAIR_LENGTH), (self.frame_center[0], self.frame_center[1] + CROSSHAIR_LENGTH), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
-
         
+        self.lock.acquire()
+        self.frame = new_frame.copy()
+        self.lock.release()
+
         print(f"process result time: {int((time() - dt)*1000)}ms total delay: {(time()-self.camera.previous_frame_time) * 1000}ms-->")
 
     def generate_forever(self):
@@ -121,7 +115,15 @@ class AprilTagCamera:
         self.detection_thread.join()
 
     def get_frame(self):
-        return self.frame_resized
+        # resize to straming resolution
+        self.lock.acquire()
+        frame_resized = cv2.resize(self.frame, STREAMING_RESOLUTION)
+        self.lock.release()
+        # draw crosshair
+        frame_center = (STREAMING_RESOLUTION[0] // 2, STREAMING_RESOLUTION[1]//2)
+        cv2.line(frame_resized, (frame_center[0] - CROSSHAIR_LENGTH, frame_center[1]), (frame_center[0] + CROSSHAIR_LENGTH, frame_center[1]), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
+        cv2.line(frame_resized, (frame_center[0], frame_center[1] - CROSSHAIR_LENGTH), (frame_center[0], frame_center[1] + CROSSHAIR_LENGTH), CROSSHAIR_COLOR, CROSSHAIR_THICKNESS)
+        return frame_resized
 
     def get_tags(self):
         return self.tags
