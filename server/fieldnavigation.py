@@ -58,7 +58,7 @@ def get_robot_position_via_navigation_tag(id:int, tag_relative_position_to_robot
     robot_relative_position_to_tag_field_oriented = tag_relative_position_to_robot_field_oriented.multiply_by_scalar(-1)
     return robot_relative_position_to_tag_field_oriented.add_by(tag_field_position)
 
-def process_results(camera_resolution:tuple, cameras:list[AprilTagCamera], camera_profiles:list[CameraProfile]):
+def process_results(camera_resolution:tuple, cameras:list, camera_profiles:list):
     global robot_visual_position, visible_tags
     # TODO: if different estimates deviates too much from one another, we think the results are not trustable
     estimationSums = Vector2D()

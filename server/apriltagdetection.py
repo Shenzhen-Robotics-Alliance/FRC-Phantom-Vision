@@ -1,6 +1,5 @@
-CAMERA_RESOLUTION = (320, 240)
-CAMERA_FRAMERATE = 120
-# STREAMING_RESOLUTION = (160, 120)
+DETECTION_RESOLUTION = (320, 240)
+DETECTION_RATE = 120
 STREAMING_RESOLUTION = (320, 240)
 FLIP_IMAGE = -1 # 0 for vertical flip, 1 for horizontal flip, -1 for flip both, None for do not flip
 
@@ -19,7 +18,7 @@ from MathUtils.LinearAlgebra import *
 class AprilTagCamera:
     def __init__(self, portID):
         print(f"<-- creating apriltag camera with port {portID} -->")
-        self.camera = cameras.USBCamera(portID, CAMERA_RESOLUTION, CAMERA_FRAMERATE, FLIP_IMAGE)
+        self.camera = cameras.USBCamera(portID, DETECTION_RESOLUTION, FLIP_IMAGE)
         self.detector = None
         if sys.platform.startswith('linux'):
             self.detector = apriltag.Detector(apriltag.DetectorOptions(families='tag36h11', nthreads=1))
@@ -139,7 +138,7 @@ class AprilTagCamera:
         return fps
 
 apriltag_cameras = [
-    AprilTagCamera(1), 
+    AprilTagCamera(0), 
     # AprilTagCamera(0)
 ]
 camera_profiles = [
