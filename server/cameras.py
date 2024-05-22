@@ -21,7 +21,7 @@ class USBCamera:
         self.flip_code = flip_code
 
         self.image = no_result
-        self.image_resized = cv2.resize()
+        self.image_resized = cv2.resize(no_result, resolution)
         self.gray = cv2.cvtColor(no_result, cv2.COLOR_BGR2GRAY)
         self.cap_thread = threading.Thread(target=self.capture_forever)
         self.stopped = False

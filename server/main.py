@@ -7,7 +7,7 @@ streamingserver.start_streaming_server()
 while True:
     try:
         fieldnavigation.pull_odometry_data_from_networktable()
-        fieldnavigation.process_results(apriltagdetection.CAMERA_RESOLUTION, apriltagdetection.apriltag_cameras, apriltagdetection.camera_profiles)
+        fieldnavigation.process_results(apriltagdetection.DETECTION_RESOLUTIONS, apriltagdetection.apriltag_cameras, apriltagdetection.camera_profiles)
         
         fieldnavigation.send_results_to_networktable()
         sleep(0.02)
