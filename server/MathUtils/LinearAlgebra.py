@@ -240,3 +240,9 @@ class Rotation2D(Transformation2D):
     def __str__(self):
         return f"rotation with radian: {self.get_radian()} \nand vector value: {super().__str__()}"
 
+
+def displacement_to_target(currentPosition:Vector2D, desiredPosition:Vector2D) -> Vector2D:
+    return desiredPosition.add_by(currentPosition.multiply_by_scalar(-1))
+    
+def distance_to_target(currentPosition:Vector2D, desiredPosition:Vector2D):
+    return displacement_to_target(currentPosition, desiredPosition).get_magnitude()
