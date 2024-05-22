@@ -102,7 +102,7 @@ class AprilTagCamera:
 
             self.lock.release()
 
-            sleep(max(0, 1/CAMERA_FRAMERATE-(time()-t)))
+            sleep(max(0, 1/DETECTION_RATE-(time()-t)))
             # sleep(max(0, 0.005-(time()-t)))
             self.frame_time_total += time() - t
             self.frame_time_samplecount += 1
