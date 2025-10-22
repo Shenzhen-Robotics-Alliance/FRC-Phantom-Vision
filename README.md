@@ -8,11 +8,31 @@ Are Limelights too costly? Are coprocessors too complicated? Introducing Phantom
 
 
 ## Features
-- Real-Time vision navigation with AprilTags @120fps(max) with global shutter camera
-![alt text](<media/vision navigation.gif>)
-- AI GamePiece Detection with pretrained dataset @30fps
 
-- Pygame Dashboard
+#### Hardware-Accelerated AprilTags Detection
+
+The system's detection of AprilTags is enhanced with GPU acceleration, achieving up to 90fps with minimal CPU load, courtesy of the advanced AI Micro-Processor.
+
+![alt text](<media/vision navigation.gif>)
+
+#### AI GamePiece Detection with pretrained dataset
+
+A custom AI object-detection application using NVIDIA Jetson's edge AI libraries with a pre-trained dataset for gamepieces, achieving high accuracy and reliability in gamepieces detection.
+
+![](./images/AI-DetectNet.png)
+
+#### Communicating with robotRIO
+
+A publisher-subscriber network interface to stream results to the robot controller in real-time.
+![alt text](<images/vision system diagram.png>)
+
+#### Camera Auto-Calibration Process
+An innovative solution that automates the camera calibration process, where the robot is programmed to autonomously navigate to various distances and orient itself at different angles. Concurrently, the system captures frames and analyzes result matrices to determine the camera's field of view (FOV) and installation angle using **linear regression** method.
+![alt text](<images/auto calibration.png>)
+<div style="display: flex;">
+    <img src="./images/lsrl.png" alt="Alt Text 1" style="width: 50%;">
+    <img src="./images/lsrl.png" alt="Alt Text 2" style="width: 50%;">
+</div>
 
 
 ## Installation Guide
